@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>咻咻咻咻 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Voice data transmission">
+<meta property="og:type" content="article">
+<meta property="og:title" content="咻咻咻咻">
+<meta property="og:url" content="http://vkwk.site/programming/20190329-audio-data.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="Voice data transmission">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-03-29T03:32:05.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.987Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="玩玩的">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-audio-data" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20190329-audio-data.html" class="article-date">
+  <time datetime="2019-03-29T03:32:05.000Z" itemprop="datePublished">2019-03-29</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      咻咻咻咻
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>之前一时兴起买了raspberry pi，本来想用来加上摄像头来做监视器的，但是时间一长就忘记了～</p>
+<p>撸完论文就想着，要不要把它用起来，这样就不会感到内疚了。</p>
+<p>灵机一动，想到了支付宝以前的声波支付，觉得很有意思，我也拿来做一下吧。</p>
+<p>几年前支付宝刚推出声波支付的时候，我们恰好学习了信号与系统，于是我就用手机采集声音，然后进行频谱分析，印象中在20kHz左右的位置出现了两座峰，用Matlab进行过滤掉高频信号后进行播放依然是咻咻咻咻的声音，所以很明显数据是通过高频信号传输的。</p>
+<p>这次，我打算也做一套这样的系统，用raspberry Pi做下位机，用手机发出声波数据。就和支付宝声波支付一样。</p>
+<p>这个系统想想，好像还挺简单的，但是越做坑儿越多～</p>
+<p>下面几章顺序可能有点儿乱，因为我一边做一边改方案，所以做完之后已经忘了学习顺序了，哈哈。</p>
+<h3 id="Sound"><a href="#Sound" class="headerlink" title="Sound"></a>Sound</h3><p>这次做这个系统，特地借了几本声学的书。</p>
+<p>学到了几个新的名词，有声音遮蔽，有声音痛感等。</p>
+<p>声音遮蔽还挺有意思的，是说对于人的耳朵来说，某个频率的声音响度高于一个阈值之后，会将其他频率的声音遮蔽。用这个方法可以做数字水印，信息隐藏。</p>
+<p>在一条不安全的语音线路上，用语音信号遮蔽隐藏的数据信号，可以迷惑劫持线路的中间人。这还是挺有意思的～</p>
+<h3 id="Signal-amp-amp-System"><a href="#Signal-amp-amp-System" class="headerlink" title="Signal &amp;&amp; System"></a>Signal &amp;&amp; System</h3><p>在学习信号与系统这门课之前，都不知道信号还可以在频遇上进行分析。一些时域上很复杂的信号，通过傅立叶变换后进行频域分析，竟然可以得到不复杂的频谱图。</p>
+<h4 id="频段串扰？"><a href="#频段串扰？" class="headerlink" title="频段串扰？"></a>频段串扰？</h4><p>一开始我打算用两个频段混合使用，这样一个时间窗口内一个频段可以代表一个0或1，如此一来可以一个时间窗口就可以用两个频段来传2个码元了。</p>
+<p>但是传输时，发现只能看到一个频段，另一个频段基本看不到，而已我选用的17.5kHz和19.5kHz两个频段进行传输，这两个频段的声音人耳一般是听不见的(反正我是听不见)，但是两个使用两个频段一起传输时，可以听到很奇怪的噪声。</p>
+<p>我很怀疑是不是不能一个时刻传两个频段的声音，于是去翻了信号与系统的课本。虽然说课本上写着</p>
+<pre><code>x(t)+y(t)-&gt;X(w)+Y(w)
+</code></pre><p>不过这个可是周期信号，在某个时间窗中两个信号并不是周期信号，所以可能并不能直接加起来，也就是说，会出现新的频段。也就是噪声频段。</p>
+<p>这大概是DSP领域的知识了，学得不好下次再研究～</p>
+<h4 id="奈奎斯特采样定律"><a href="#奈奎斯特采样定律" class="headerlink" title="奈奎斯特采样定律"></a>奈奎斯特采样定律</h4><p>学霸们的自信总是会出问题的～</p>
+<p>再记一遍。采样频率是信号最大频率的<code>2倍</code>，一开始把奈奎斯特采样定律记反了，就挺尴尬的了。</p>
+<p>系统使用44100Hz的采样频率。根据奈奎斯特采样定律，可以将最大频率为22050Hz的信号无失真的采集，这也是为什么数据传输使用17500hz和19500hz。加上信号带宽后，19500hz数据的最高频率应该还是小于22000Hz的。<br>所以从理论上来说，使用44100Hz是可以采集到数据的。</p>
+<h3 id="PCM"><a href="#PCM" class="headerlink" title="PCM"></a>PCM</h3><p>人耳听到的是模拟信号，但是机器只能处理数字信号，所以需要一个方法来将模拟信号转换为数字信号。这就有了PCM，脉冲编码调制。</p>
+<p>在采样后，将每个采样点得到的电平分成x分，用一个整数来表示。比如8位的PCM，就将电平分为正负128位。16位PCM就将电平分为正负32768位。</p>
+<p>位数越高，声音就采集的越准确。这也是踩了坑才想明白的～</p>
+<p>一开始想节省一些内存空间，打算使用8位的PCM来进行发声，然后发出的声音其难听无比，而且完全没有把预想的频段信息播放出来，我甚至觉得是Android端的发声代码写错了。</p>
+<p>后来我将PCM数据打印出来一看，确实连我自己都不能相信我发送的是正弦波。毕竟在高频率采样的情况下，几个点就需要表示数据信号的一个周期，如果使用8位PCM，很可能会将数据变成一个三角波的样子。于是我改用了16位PCM，就正常了很多。</p>
+<h3 id="Frame"><a href="#Frame" class="headerlink" title="Frame"></a>Frame</h3><p>帧格式还是要有的，毕竟是个数字系统。</p>
+<p>帧头+数据长度+数据+Checksum+帧尾</p>
+<p>其实还挺长的，确定了帧格式就可以设计状态机，从而做到一边接收一边解析。</p>
+<h3 id="ASK-amp-amp-FSK"><a href="#ASK-amp-amp-FSK" class="headerlink" title="ASK &amp;&amp; FSK"></a>ASK &amp;&amp; FSK</h3><p>一开始我还在纠结，我做的究竟是个数字通信系统还是模拟通信系统。因为我想了想感觉自己仿佛是在用17k，19k的载波进行调制后通信的。但是后面一想，我都有帧格式了，我都有码元了，那一定是数字通信系统了！</p>
+<p>于是翻开通信原理这本书，看到了ASK、FSK、PSK等等等等，最简单的就是ASK了。使用一个频段进行通信，没有检测到信号则代表0，检测到信号则代表1，就是这么简单。</p>
+<p>FSK也还行，一个频段代表0，另一个频段代表1。</p>
+<p>通信系统和我的系统有些区别，就是通信系统的时间同步做的比较好，但是我的系统没有时间概念，容易出现数据黏包，而这个问题将在下一篇中好好讲讲</p>
+<h3 id="Decode"><a href="#Decode" class="headerlink" title="Decode"></a>Decode</h3><p>这个也留到下一篇去说，因为感觉挺长的～</p>
+<h3 id="End"><a href="#End" class="headerlink" title="End"></a>End</h3><p>这个系统做完后，我发现我又重学了信号与系统，通信原理，还学习了很多声学的知识。收获还是挺大的呢。</p>
+<p>学了Android的音频开发，Python的音频开发等等，感觉这并不是个简单的系统哇。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20190329-audio-data.html" data-id="ckl153war002ozxijdhryqbpg" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/programming/20190518-micro-service-practice-1.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          微服务架构练习-1
+        
+      </div>
+    </a>
+  
+  
+    <a href="/life/20190101-2019-stronger.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">2018 Stronger</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

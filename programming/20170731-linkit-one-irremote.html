@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Linkit One 空调遥控器 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="just play play">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linkit One 空调遥控器">
+<meta property="og:url" content="http://vkwk.site/programming/20170731-linkit-one-irremote.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="just play play">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://vvk.ixuanlun.com/linkit_one_irsignal.gif">
+<meta property="og:image" content="http://vvk.ixuanlun.com/linkit_one_need_signal1.jpeg">
+<meta property="og:image" content="http://vvk.ixuanlun.com/linkit_one_need_signal2.jpeg">
+<meta property="og:image" content="http://vvk.ixuanlun.com/linkit_one_irremote_small.jpg">
+<meta property="article:published_time" content="2017-07-31T14:36:18.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.992Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="Arduino">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://vvk.ixuanlun.com/linkit_one_irsignal.gif">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-linkit-one-irremote" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20170731-linkit-one-irremote.html" class="article-date">
+  <time datetime="2017-07-31T14:36:18.000Z" itemprop="datePublished">2017-07-31</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Linkit One 空调遥控器
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="使用linkit-one-控制空调"><a href="#使用linkit-one-控制空调" class="headerlink" title="使用linkit one 控制空调"></a>使用linkit one 控制空调</h3><p>这一篇会比较长,会写很多踩过的坑,一些知识,弯路,废话.</p>
+<p>如果你想直接看结果,可以直接看小标题<code>Release</code></p>
+<h4 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h4><p>这夏天真是热,虽然成都比杭州的温度低7-10度,但是相比较舒适的22-25度来说,还是比较燥热的.</p>
+<p>所以空调肯定是要开的.</p>
+<p>可是,一直开会比较冷,开一会儿关掉又会比较热,即使空调有定时开定时关的功能,那这个操作在睡觉期间,只能做一次.它并不能智能的开关开关开关……</p>
+<p>但是,自己做一个遥控器,就可以啊！</p>
+<p>于是就开始着手搞这个了！</p>
+<h4 id="My-Limitation"><a href="#My-Limitation" class="headerlink" title="My Limitation"></a>My Limitation</h4><p>我是个纯种的程序员,虽然说数电学的还不错,但是模电基本上都忘光了.所以要我画画板子,计算机算电阻电容,那我还不如直接放弃算了～</p>
+<p>之前玩过Arduino,所以我对Arduino还算有点儿了解,所以肯定就选择这个平台了.</p>
+<p>因为我们公司自己的智能硬件大部分都涉及到低功耗蓝牙,所以我觉得用蓝牙来进行互动对我来说开发起来也比较方便,所以我就选择了之前参加比赛骗来的Linkit One开发版.它自带了蓝牙、Wifi、GPS、GSM模块<code>(一波广告)</code></p>
+<h4 id="Requirements"><a href="#Requirements" class="headerlink" title="Requirements"></a>Requirements</h4><p>DHT22温湿度传感器,IR发射器,IR接收器.</p>
+<p>面包版,线,线,线,线,线…</p>
+<p>Linkit One,Arduino开发环境, Linkit One SDK.</p>
+<h4 id="Knowledge"><a href="#Knowledge" class="headerlink" title="Knowledge"></a>Knowledge</h4><p><code>以下内容基本上是摸索过程中学的,因为我一开始并没有觉得这个东西会那么的复杂</code></p>
+<h5 id="遥控器和空调的通信"><a href="#遥控器和空调的通信" class="headerlink" title="遥控器和空调的通信"></a>遥控器和空调的通信</h5><p>一查就知道,他们用一个叫做38khz红外来通信.</p>
+<p>那么38khz红外是个啥玩意儿呢？</p>
+<p>先上图</p>
+<p><img src="http://vvk.ixuanlun.com/linkit_one_irsignal.gif" alt="irsignal"></p>
+<p>就是发射器在一定的时间内通过亮灭亮灭的快速切换来发送0,1,0,1</p>
+<p>比如说 载波发射0.56ms,不发射0.56ms表示数字信号”0”;载波发射0.56ms,不发射1.68ms表示数字信号”1”</p>
+<p>上面说的这个操作只是个<code>例子</code>,不代表所有的空调,电视什么的都用这种方式来表示0和1.</p>
+<h5 id="Arduino"><a href="#Arduino" class="headerlink" title="Arduino"></a>Arduino</h5><p>这个怎么解释呢？</p>
+<p>举个例子吧～</p>
+<p>单片机工作起来就是在永远循环执行一个代码块儿.</p>
+<p>在Arduino中有<code>void loop()</code>这个函数,在这个函数中把要循环做的事情放进去,就可以让它正常工作了.</p>
+<p>比如说把某一个引脚置为高电平,只要简单的写一句<code>DigitalWrite(Pin Number,HIGH);</code>就OK了</p>
+<p>读取某个引脚的点平值,只要简单的写一句<code>DigitalRead(Pin Number);</code>就OK了</p>
+<p>差不多就这么个操作,基本上不用考虑什么中断、分片、多线程之类的东西</p>
+<h5 id="发送指令＊"><a href="#发送指令＊" class="headerlink" title="发送指令＊"></a>发送指令＊</h5><p>虽然我们知道了如何让IR发射器发送红外信号,但是我们依然不知道这个空调的发射指令是什么～</p>
+<p>这个学习指令几年前在机顶盒遥控器上面,就见过了.在拥有了IR接收器之后,他的原理其实蛮简单的.</p>
+<p>IR接收器在收到高低点平切换的时候,记录一下时间,就可以知道发射端高低信号的持续时间了.</p>
+<p>比如说:</p>
+<p>我抓到的关机指令</p>
+<pre><code>4360,4410,477,2205,237,266,520,1678,514,1734,484,693,367,527,533,1767,479,735,370,482,539,1956,309,491,630,550,477,2208,2234,473,532,1748,482,563,515,1585,1065,1449,281,1590,1090,1402,347,461,539,2139,208,1542,506,2262,185,283,769,343,536,516,551,522,942,1422,420,512,556,513,1150,1339,331,1584,544,1762,552,430,581,496,565,1133,198,316,846,266,539,489,574,526,807,339,531,1694,503,1729,517,1614,521,1753,456,1645,522,5371,4506,4419,463,1699,726,292,531,1601,838,1442,524,476,576,508,1098,1414,279,501,567,514,1063,1484,309,466,555,510,557,1766,693,1394,538,1135,205,1455,511,503,547,1773,450,1674,517,1719,480,1634,555,486,562,1736,535,1564,540,1758,737,288,499,520,553,540,822,339,522,1663,532,504,1096,200,381,1680,509,1762,436,1650,524,505,571,1044,205,389,753,322,560,527,565,1199,190,260,789,334,512,1625,903,1428,434,1599,1139,1335,316,1592,559
+</code></pre><p>开机指令</p>
+<pre><code>4385,4385,471,1690,447,579,527,1600,996,1236,548,498,584,490,8521,561,106,171,65,62,61,64,67,58,62,450,226,562,504,1590,571,528,722,1503,546,1593,839,312,555,481,571,1630,583,1695,528,1577,572,1693,516,1589,560,518,658,1564,553,1582,753,405,535,524,591,491,571,511,771,410,497,1621,563,1747,514,466,579,1601,567,726,457,459,537,509,627,491,557,531,653,473,527,1620,609,489,852,1388,518,1776,437,1712,485,1740,441,5368,4596,4410,400,1570,553,523,556,1700,567,1552,569,526,809,351,491,1634,554,528,560,621,506,1597,594,493,592,786,360,1571,572,1590,657,463,554,1599,566,1721,502,535,549,513,563,1701,506,1607,562,1771,463,1596,552,1806,458,474,580,1582,556,1709,500,510,567,522,558,536,820,320,534,525,564,1611,584,1677,526,488,561,1874,338,519,565,517,569,512,575,520,660,479,547,523,560,1618,735,377,564,1606,576,1685,520,1619,557,1721,505
+</code></pre><p>有了这一坨数据,后面只要控制IR发射器Data引脚*,就可以发送红外指令了！</p>
+<h5 id="PWM-脉冲宽度调制"><a href="#PWM-脉冲宽度调制" class="headerlink" title="PWM(脉冲宽度调制)"></a>PWM(脉冲宽度调制)</h5><p>嗯,这个东西我琢磨了会儿才明白.</p>
+<p>一开始我一直不明白,我要这玩意儿干嘛.</p>
+<p>引用百度百科里面的解释: <code>脉冲宽度调制是利用微处理器的数字输出来对模拟电路进行控制的一种非常有效的技术,广泛应用在从测量、通信到功率控制与变换的许多领域中.</code></p>
+<p>不过后面在<code>pj大佬</code>的教导下,我明白了它的意思,简单说就是我要发高电平,就发PWM波；我要发低点平,就不发PWM波.这看起来和AM调制一样,不同的是AM调制是对一个模拟信号进行调制；而我这里用到的是对数字信号进行调制.</p>
+<p>我就假设我说明白了～</p>
+<h4 id="Dev"><a href="#Dev" class="headerlink" title="Dev"></a>Dev</h4><p>对于DHT和蓝牙的开发我就不多写了,因为真的蛮简单的,也没什么大坑.最多吐槽一下Linkit One这个板子对BLE蓝牙的限制吧～这家伙不能修改广播数据(改不了名字、服务UUIDs、制造商数据……),而且外设模式下Notify貌似是没有用的～</p>
+<p>好嘞,蓝牙和温湿度都讲完了！下面可以一心一意的讲IR发射的坑了.</p>
+<h5 id="Arduino-IRRemote"><a href="#Arduino-IRRemote" class="headerlink" title="Arduino-IRRemote"></a>Arduino-IRRemote</h5><p>在我真正开始这个项目的之前,我做了一些估计.查了我需要的各种模块的开发难度,找找有没有什么可以用的库可以直接调用.</p>
+<p><a href="https://github.com/adafruit/DHT-sensor-library" target="_blank" rel="noopener">DHT温湿度传感器</a></p>
+<p><a href="https://github.com/z3t0/Arduino-IRremote" target="_blank" rel="noopener">IR发射接收</a></p>
+<p><a href="https://github.com/WiserUFBA/ArduMideaWrapper" target="_blank" rel="noopener">美的空调Arduino发射接收</a></p>
+<p>我找到了这三个库,觉得这个项目在元件齐全了之后大概只要一个下午就可以搞定了.</p>
+<p>于是,收到IR发射器之后,我就迫不及待的开工了！</p>
+<pre><code>~~~/Arduino/libraries/IRremote/irISR.cpp:18:5: error: expected constructor, destructor, or type conversion before &apos;(&apos; token
+ISR (TIMER_INTR_NAME)
+</code></pre><p>编译错误！我溯源找到了这个类,发现了ISR()这个函数,并没有写他的来源,说明这个函数可能是板子自带的.于是我就用Arduino UNO来编译相同的代码,编译通过！</p>
+<p>天啦噜,Arduino-IRRemote这个库是不支持Linkit One的！</p>
+<p>吓得我赶紧去看看那个直接发美的空调指令的库,这个库,<code>也是调用Arduino-IRRemote的</code>！</p>
+<h5 id="异想天开的做法"><a href="#异想天开的做法" class="headerlink" title="异想天开的做法"></a>异想天开的做法</h5><p>然后我就把发射代码搞出来,放到了Arduino UNO上面来运行.竟然可以成功的关闭空调了！</p>
+<p>于是我陷入了深深的沉思～</p>
+<p>难道说,我得用两颗单片机来做这个简单的小玩意儿？？</p>
+<p>说实话,我真的这么折腾了一段时间,效果和想象中的并不一样,这可能和模拟电路的知识有关～</p>
+<h5 id="手动生成PWM！"><a href="#手动生成PWM！" class="headerlink" title="手动生成PWM！"></a>手动生成PWM！</h5><p>回到原始的方法,我开始理解IRRemote发送数据的工作原理</p>
+<p>发送原始数据</p>
+<pre><code>void  IRsend::sendRaw (unsigned int buf[],  int len,  int hz)
+{
+    // Set IR carrier frequency
+    enableIROut(hz);
+
+    for (int i = 0;  i &lt; len;  i++) {
+        if (i &amp; 1)  space(buf[i]) ;
+        else        mark (buf[i]) ;
+    }
+
+    space(0);  // Always end with the LED off
+}
+</code></pre><p>这好像是发高电平</p>
+<pre><code>void  IRsend::mark (int time)
+{
+    TIMER_ENABLE_PWM; // Enable pin 3 PWM output
+    if (time &gt; 0) delayMicroseconds(time);
+}
+</code></pre><p>这好像是发低电平</p>
+<pre><code>void  IRsend::space (int time)
+{
+    TIMER_DISABLE_PWM; // Disable pin 3 PWM output
+    if (time &gt; 0) delayMicroseconds(time);
+}
+</code></pre><p>这就当作是配置PWM的频率吧</p>
+<pre><code>void  IRsend::enableIROut (int khz)
+{
+    // Disable the Timer2 Interrupt (which is used for receiving IR)
+    TIMER_DISABLE_INTR; //Timer2 Overflow Interrupt
+
+    pinMode(TIMER_PWM_PIN, OUTPUT);
+    digitalWrite(TIMER_PWM_PIN, LOW); // When not sending PWM, we want it low
+    TIMER_CONFIG_KHZ(khz);
+}
+</code></pre><p>在<code>TIMER_DISABLE_PWM</code>、<code>TIMER_ENABLE_PWM</code>里面调用了很多和ISR,PWM有关的东西,所以这里开始就要重新了</p>
+<p>先写个高电平</p>
+<pre><code>void mark(int time){
+    int t=0;
+    boolean isHigh=false;
+    while(t&lt;=time){
+        isHigh=!isHigh;
+        t+=enable_pwm(isHigh);
+    }
+}
+
+int enable_pwm(boolean high){
+    if(high){
+        digitalWrite(3,HIGH);
+    }else{
+        digitalWrite(3,LOW);
+    }
+    delayMicroseconds(13);
+    return 13;
+}
+</code></pre><p>通过计算38khz的一个周期是26微秒,所以我们13微秒就要转换一次电平～</p>
+<p>再写个低电平</p>
+<pre><code>void space(int time){
+    digitalWrite(3,LOW);
+    delayMicroseconds(time);
+}
+</code></pre><p>这个不需要发转电平,所以就轻松一些了～</p>
+<p>由于我已经固定了13微秒转换一次,所以也不用实现enableIROut(int khz)这个函数了.</p>
+<p>运行！编译通过！发送！IR接收机采集到了IR信号！可是～空调好像没反应～</p>
+<h5 id="还有这种操作"><a href="#还有这种操作" class="headerlink" title="还有这种操作"></a>还有这种操作</h5><p>气氛一度很尴尬,不过我毕竟只是个普通人,看不到发送的数据长什么样子,所以在<code>添哥大佬</code>的帮助下我使用了高档示波器</p>
+<p>这是空调遥控器发出的信号在接受端的样子</p>
+<p><img src="http://vvk.ixuanlun.com/linkit_one_need_signal1.jpeg" alt="right signal"></p>
+<p>这是我发出的信号在接受端的样子</p>
+<p><img src="http://vvk.ixuanlun.com/linkit_one_need_signal2.jpeg" alt="error signal"></p>
+<p>这<code>尖峰</code>哪儿来的？</p>
+<p>检查代码真的没有问题,这个异常我只能归结为硬件问题了,要知道linkit one是一个很高级,很牛逼的硬件,它甚至有多线程的操作,所以,它会不会强行的我把我操作所在的线程给中断了呢？又或者linkit one并没有能力做那么高频的电平转换.</p>
+<h5 id="analogWriteAdvance"><a href="#analogWriteAdvance" class="headerlink" title="analogWriteAdvance"></a>analogWriteAdvance</h5><p>气氛再一度尴尬,不过<code>添哥大佬</code>在官方文档的<code>Analog I/O</code>中找到了<code>analogWriteAdvance()</code>这个函数！</p>
+<pre><code>void analogWriteAdvance(
+uint32_t pin, 
+uint32_t sourceClock, 
+uint32_t clockDivider, 
+uint32_t cycle, 
+uint32_t dutyCycle
+);
+</code></pre><p>而他的例子里面就是生成了一个PWM波！</p>
+<p>在经过<code>不</code>简单的计算之后,我改写了PWM波的生成和暂停</p>
+<pre><code>//Enable 38khz PWM
+analogWriteAdvance(PWM_PIN,PWM_SOURCE_CLOCK_13MHZ,PWM_CLOCK_DIV1,342,171);
+//Disable 38khz PWM
+analogWriteAdvance(PWM_PIN,PWM_SOURCE_CLOCK_13MHZ,PWM_CLOCK_DIV1,342,0);
+</code></pre><p>编译上传运行,<code>滴</code>,空调开了～(由于这是在公司做的,所以信号序列也是公司空调的序列,所以回到寝室,还得再改一下)</p>
+<h5 id="时好时坏的遥控器"><a href="#时好时坏的遥控器" class="headerlink" title="时好时坏的遥控器"></a>时好时坏的遥控器</h5><p>回到了寝室,我赶紧把新的数据放进去,对准空调,发了开机指令……再发一次……再发一次</p>
+<p>还是没用？？不过关机指令倒是可以了</p>
+<p>这说明发送是可以的,只是内容还有问题.</p>
+<p>在网上搜寻了很久的开关机数据,都不太行,这是我想起了那个<code>美的空调遥控指令</code>的库！</p>
+<p>之前,我不能使用它,是因为IRRemote中无法使用Linkit One的PWM波发生器,所以如果我改了那个发射函数,不就OK了嘛！</p>
+<p>它需要什么方法我就给什么方法,连名字和参数都一样!</p>
+<p>VKIRSender.h</p>
+<pre><code>class VKIRSender{
+public:
+    void mark(int time);
+    void space(int time);
+    void enableIROut(int hz);
+};
+</code></pre><p>VKIRSender.cpp</p>
+<pre><code>#include &quot;VKIRSender.h&quot;
+#include &lt;Arduino.h&gt;
+
+#define PWM_PIN 3
+
+void VKIRSender::mark(int time){
+    analogWriteAdvance(PWM_PIN,PWM_SOURCE_CLOCK_13MHZ,PWM_CLOCK_DIV1,342,171);
+    delayMicroseconds(time);
+}
+
+void VKIRSender::space(int time){
+    analogWriteAdvance(PWM_PIN,PWM_SOURCE_CLOCK_13MHZ,PWM_CLOCK_DIV1,342,0);
+    delayMicroseconds(time);
+}
+
+void VKIRSender::enableIROut(int hz){
+
+}
+</code></pre><p>在这个库的帮助下,我甚至可以不使用抓来的数据,我甚至可以设定温度,冷热模式,风速……</p>
+<p>试验了一下,<code>滴</code>！成功了</p>
+<h4 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h4><p>开发历程差不多就是这样,真的好艰辛～</p>
+<p>当然,现在还存在一个比较大的问题,就是发射距离！</p>
+<p>我只能在离空调1M的位置,让空调听话,稍微远一点,他就不听话了～</p>
+<p>在解决了这个问题之后,就可以配合温湿度传感器,让它智能起来了！</p>
+<h4 id="RELEASE"><a href="#RELEASE" class="headerlink" title="RELEASE"></a>RELEASE</h4><p>前面废话那么多,这下面才是最有用的～</p>
+<p>代码开源了,其实并没有什么很难得地方,只是由于踩了很多坑,所以我觉得公开给大家伙用用,可能还是蛮好的.</p>
+<p>去<a href="https://github.com/VikingWarlock/Linkit-One-Bluetooth-AC-Remoter" target="_blank" rel="noopener">Github</a>看,给个Star当然也是极好的～</p>
+<p>接线差不多是这个样子的</p>
+<p><img src="http://vvk.ixuanlun.com/linkit_one_irremote_small.jpg" alt="board"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20170731-linkit-one-irremote.html" data-id="ckl153wbk004izxijz1fo8jqh" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/programming/20170818-ios-image-get-color.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          iOS图片取色
+        
+      </div>
+    </a>
+  
+  
+    <a href="/programming/20170630-android-bluetooth-crap.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Android上见鬼的蓝牙</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>HID还是USB | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="learn something when I&#39;m a student">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HID还是USB">
+<meta property="og:url" content="http://vkwk.site/study/20180717-hid-over-usb.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="learn something when I&#39;m a student">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-07-17T09:57:08.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.990Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="Working">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-hid-over-usb" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/study/20180717-hid-over-usb.html" class="article-date">
+  <time datetime="2018-07-17T09:57:08.000Z" itemprop="datePublished">2018-07-17</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/study/">学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      HID还是USB
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h2><p>大三时候做了精益防伪的第一代防伪芯片的Android版测试读写器。如今这个公司发展的有点儿好，所以，<br>他们出了第二代芯片，增加了更多安全措施。</p>
+<p>为了对第二代芯片进行生产测试，我们需要做一个全新的测试软件。那么为了与新一代的RFID芯片进行通信，我们需要写一个底层驱动，来使得外接的<code>USB</code> RFID读写器工作。</p>
+<p>这个测试上位机是工作在windows上的，对于一个有强迫症的开发者来说，当时不会选择使用有跨平台特性的java来开发。</p>
+<p>我们要了上一代芯片的测试程序，是用C++做的通信和界面(MFC)。然而用C++写界面，肯定是很费劲的。所以我们换个思路。充分利用windows上面可以调用各种dll的特点来解决<code>c++写界面要累死</code>这种尴尬的情况。</p>
+<p>这就会引出第一个坑(逐渐远离标题)</p>
+<h2 id="C-与C-混合编程"><a href="#C-与C-混合编程" class="headerlink" title="C#与C++混合编程"></a>C#与C++混合编程</h2><p>C++有多难写，应该不用再多说了，我就是那种不到万不得己，是绝对不会去碰C++的垃圾~所以得到了上一版测试程序后，我们看到了之前的RFID读写器驱动代码，将它进行生成，得到了一个dll。</p>
+<p>在这个基础上，再封装一个wpf可以使用的库，那简直完美。</p>
+<p>于是就直接新建一个C#的库项目，导入之前的底层项目，引入lib文件，(再花了很多精力解决了一些环境路径之类的问题)，终于可以成功生成，在新建的wpf项目中添加引用:</p>
+<p>错误：不是一个有效的COM组件！？</p>
+<p>于是查了这个错误报告，有的说得用CLR库，就是公共语言运行库，想想好像也有道理。于是又如法炮制了一遍，终于可以成功生成了，再次添加引用:</p>
+<p>错误：不兼容！？</p>
+<p>于是又去查了一些资料，看到C#和C++混合编程，可以使用DllImport来导入C++ Dll中的函数，不过问题来了，这里在使用DllImport的时候，是需要做一些类型转换的。</p>
+<p>毕竟.NET里面的一些数据类型，在C++中是没有的，所以从原理上来想，如果不做一些类型转换或者类型的重新定义的话，操作系统会很迷惑的~</p>
+<p>所以，我们就放弃了使用原始C++库这个思路，准备撩起袖子自己写了。（逐渐想起标题）</p>
+<h2 id="USB"><a href="#USB" class="headerlink" title="USB"></a>USB</h2><p>既然是重新开始，那就要开始疯狂的查询资料了。之前写过windows的串口通信。所以在我的想象中，他们应该是差不多的吧，把USB口子打开，就得到了input和output的流，之后就可以开开兴兴的进行通信了。</p>
+<p>不过，并不是这样的~</p>
+<p>作为一个懒惰的程序员，我们下一步想到的，就是找开源库。因为这个项目的时间有点紧张，所以怎么搞得快就得怎么做！</p>
+<h3 id="LibUsbDotNet"><a href="#LibUsbDotNet" class="headerlink" title="LibUsbDotNet"></a>LibUsbDotNet</h3><p>首先我们找到了<a href="https://github.com/LibUsbDotNet/LibUsbDotNet" target="_blank" rel="noopener">LibUsbDotNet</a>，仔细研究了他的一些接口，写了一套链接，发送的方法。</p>
+<p>USB里面有一些末端(EndPoint)描述，这些末端的ID的第一个bit代表着这个末端的通信方向。如果第一个bit为1，则代表input，如果这个bit为0，则代表output。</p>
+<pre><code>public bool connectDevice() {
+
+    UsbRegDeviceList registryList= UsbDevice.AllDevices;
+
+    for (int index = 0; index &lt; registryList.Count; index++) {
+        UsbRegistry registy = registryList[index];
+        if (registy.SymbolicName.Contains(&quot;5750&quot;) &amp;&amp; registy.SymbolicName.Contains(&quot;0483&quot;))
+        {
+            bool connect_status= registy.Open(out this.device);
+            if (connect_status) {
+
+                foreach (UsbConfigInfo info in this.device.Configs){
+                    foreach (UsbInterfaceInfo interfaceInfo in info.InterfaceInfoList) {
+                        foreach (UsbEndpointInfo endPoint in interfaceInfo.EndpointInfoList) {
+                            System.Console.WriteLine(&quot; id:&quot; + endPoint.Descriptor.EndpointID);
+                            if ((endPoint.Descriptor.EndpointID &amp; 0x80) == 0x80)
+                            {
+                                //in
+                                this.reader = this.device.OpenEndpointReader((ReadEndpointID)endPoint.Descriptor.EndpointID);
+                                continue;
+                            }
+                            else {
+                                //out
+                                this.writer = this.device.OpenEndpointWriter((WriteEndpointID)endPoint.Descriptor.EndpointID);
+                                continue;
+                            }
+                        }
+
+            }
+
+        }
+
+        if (this.writer != null &amp;&amp; this.reader != null)
+        {
+            return true;
+        }
+        else {
+             return false;
+        }
+        }
+        }
+    }
+    return false;
+}
+</code></pre><p>缩进问题请谅解，垃圾visual studio</p>
+<p>在学习使用lib-usb的时候，我们了解到了pid和vid。就和串口一样有com1，com2等。上位机(操作系统)通过pid和vid来过滤插入的硬件。</p>
+<p>但是，我们发现使用lib usb的工作原理貌似不是这样的。感觉他会建立虚拟硬件，虚拟硬件建立完毕后，他的pid和vid都和原来的不一样了，但是好在他的guid里面还是包含了原始的pid和vid，所以采用了上面代码中的方法来过滤来设备。</p>
+<p>有了writer和reader之后，对他们进行字节流操作，就ok了。</p>
+<p>但是，不行。</p>
+<p>还需要设置读入写出的handler，也就是说每一个I/O操作都强制需要有回调函数，否则不会成功调用。</p>
+<p>而且当青青成功的使用lib-usb之后，发现做一次写入操作之后，整个软件就卡住了。连问题都没有找到～</p>
+<p>Spidey大佬跟我说，usb是仅仅个介质，并不是一种通信。就好比说Wi-Fi是一种介质，真正通信的对象是服务器或者主机</p>
+<h2 id="Hid"><a href="#Hid" class="headerlink" title="Hid"></a>Hid</h2><p>HID也叫做人体输入学设备，打开windows的设备管理器，插上鼠标键盘就会显示一个人体输入学设备。</p>
+<p>一开始用了一个叫HidLibrary的库，没成功，所以也没有做什么记录。</p>
+<p>之后我们恍然大悟！一开始就不应该去学习USB开发，而应该去学习HID的开发！</p>
+<p>HID的资料就比较多了~</p>
+<p>接下来的内容转自于一位<a href="https://blog.csdn.net/u010875635/article/details/73321066" target="_blank" rel="noopener">前辈大佬</a>，很多的博文也是转载于他的文章。</p>
+<p>Windows中对HID的操作比较好理解，和操作系统处理多线程服务器差不多，每个连接都用一个文件来维持。</p>
+<p>我对他的代码做了修改，原来版本是异步的发送和接收，这样的做法很高效而且也很健康，只是我们这次的项目似乎用不到这么高级的方法。所以我将它改为了同步发送和同步接收。</p>
+<p>这个项目是由HID类和HIDInterface类构成</p>
+<p>现在还是直接贴代码吧</p>
+<p>HID类:</p>
+<pre><code>using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.IO;
+using Microsoft.Win32.SafeHandles;
+using System.Windows;
+
+
+namespace ReaderCSharp
+{
+        public class Hid : object
+        {
+            private IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
+            private const int MAX_USB_DEVICES = 64;
+            private bool deviceOpened = false;
+            private FileStream hidDevice = null;
+            private IntPtr hHubDevice;
+
+
+        /// &lt;summary&gt;
+        /// 打开指定信息的设备
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;vID&quot;&gt;设备的vID&lt;/param&gt;
+        /// &lt;param name=&quot;pID&quot;&gt;设备的pID&lt;/param&gt;
+        /// &lt;param name=&quot;serial&quot;&gt;设备的serial&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        public HID_RETURN OpenDevice(UInt16 vID, UInt16 pID, string serial)
+            {
+                if (deviceOpened == false)
+                {
+                //获取连接的HID列表
+                    List&lt;string&gt; deviceList = new List&lt;string&gt;();
+                    GetHidDeviceList(ref deviceList);
+                    if (deviceList.Count == 0)
+                        return HID_RETURN.NO_DEVICE_CONECTED;
+                    for (int i = 0; i &lt; deviceList.Count; i++)
+                    {
+                    if (!(deviceList[i].Contains(String.Format(&quot;{0:X0000}&quot;, vID)) &amp;&amp; deviceList[i].Contains(String.Format(&quot;{0:X0000}&quot;, pID)))) {
+                        continue;
+                    }
+
+                        IntPtr device = CreateFile(deviceList[i],
+                                                    0xc0000000,//DESIREDACCESS.GENERIC_READ | DESIREDACCESS.GENERIC_WRITE,
+                                                    0x00000003,
+                                                    0,
+                                                    3,//CREATIONDISPOSITION.OPEN_EXISTING,
+                                                    0x40000000,//FLAGSANDATTRIBUTES.FILE_FLAG_OVERLAPPED,
+                                                    0);
+                    if (device != INVALID_HANDLE_VALUE)
+                    {
+                        HIDD_ATTRIBUTES attributes;
+                        IntPtr serialBuff = Marshal.AllocHGlobal(512);
+                        HidD_GetAttributes(device, out attributes);
+                        HidD_GetSerialNumberString(device, serialBuff, 512);
+                        string deviceStr = Marshal.PtrToStringAuto(serialBuff);
+                        Marshal.FreeHGlobal(serialBuff);
+                        if (attributes.VendorID == vID &amp;&amp; attributes.ProductID == pID &amp;&amp; deviceStr.Contains(serial))
+                        {
+                            IntPtr preparseData;
+                            HIDP_CAPS caps;
+                            HidD_GetPreparsedData(device, out preparseData);
+                            HidP_GetCaps(preparseData, out caps);
+                            HidD_FreePreparsedData(preparseData);
+                            //input length ==64
+                            hidDevice = new FileStream(new SafeFileHandle(device, false), FileAccess.ReadWrite, 65, true);
+                            deviceOpened = true;
+                            //BeginAsyncRead();
+
+                            hHubDevice = device;
+                            return HID_RETURN.SUCCESS;
+                        }
+                    }
+                    }
+                    return HID_RETURN.DEVICE_NOT_FIND;
+                }
+                else
+                    return HID_RETURN.DEVICE_OPENED;
+            }
+
+            /// &lt;summary&gt;
+            /// 关闭打开的设备
+            /// &lt;/summary&gt;
+            public void CloseDevice()
+            {
+                if (deviceOpened == true)
+                {
+                    deviceOpened = false;
+                try
+                {
+                    hidDevice.Close();
+                }
+                catch (Exception e) {
+
+                    System.Console.WriteLine(e.Message);
+                    System.Console.WriteLine(e.StackTrace);
+
+                }
+            }
+            }
+
+            /// &lt;summary&gt;
+            /// 开始一次异步读
+            /// &lt;/summary&gt;
+            public void ReadCMD()
+            {
+            byte[] inputBuff = new byte[65];
+            int offset = 0;
+            int total_size = 0;
+            int read_size = 0;
+            try
+            {
+                while (total_size &lt; 65&amp;&amp;(read_size=hidDevice.Read(inputBuff, offset, 65 - offset)) &gt; 0)
+                {
+                    total_size += read_size;
+                }
+                if (total_size &gt;= 65) {
+                    OnDataReceived(inputBuff);
+                }
+            }
+            catch {
+                EventArgs ex = new EventArgs();
+                OnDeviceRemoved(ex);//发出设备移除消息
+                CloseDevice();
+            }
+        }
+
+
+            public delegate void DelegateDataReceived(object sender, byte[] e);
+            //public event EventHandler&lt;ConnectEventArg&gt; StatusConnected;
+
+            public DelegateDataReceived DataReceived;
+
+            /// &lt;summary&gt;
+            /// 事件:数据到达,处理此事件以接收输入数据
+            /// &lt;/summary&gt;
+            protected virtual void OnDataReceived(byte[] e)
+            {
+                if (DataReceived != null) DataReceived(this, e);
+            }
+
+            /// &lt;summary&gt;
+            /// 事件:设备断开
+            /// &lt;/summary&gt;
+
+            public delegate void DelegateStatusConnected(object sender, EventArgs e);
+            public DelegateStatusConnected DeviceRemoved;
+            protected virtual void OnDeviceRemoved(EventArgs e)
+            {
+                if (DeviceRemoved != null) DeviceRemoved(this, e);
+            }
+
+            /// &lt;summary&gt;
+            ///
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;buffer&quot;&gt;&lt;/param&gt;
+            /// &lt;returns&gt;&lt;/returns&gt;
+            public HID_RETURN Write(byte[] r)
+            {
+                if (deviceOpened)
+                {
+                if (!hidDevice.CanWrite) {
+                    return HID_RETURN.WRITE_FAILD;
+                }
+                try
+                {
+                    byte[] buffer = new byte[65];
+                    buffer[0] = 0;
+                    for (int i = 0; i &lt; 64; i++)
+                        buffer[i+1] = r[i];
+
+                    hidDevice.Write(buffer, 0, 65);
+
+                    return HID_RETURN.SUCCESS;
+                }
+                catch (IOException exception)
+                {
+                    System.Console.WriteLine(exception.Message);
+                    System.Console.WriteLine(exception.StackTrace.ToString());
+
+                    EventArgs ex = new EventArgs();
+                    OnDeviceRemoved(ex);//发出设备移除消息
+                    CloseDevice();
+                    return HID_RETURN.NO_DEVICE_CONECTED;
+                }
+
+                }
+                return HID_RETURN.WRITE_FAILD;
+            }
+
+
+            /// &lt;summary&gt;
+            /// 获取所有连接的hid的设备路径
+            /// &lt;/summary&gt;
+            /// &lt;returns&gt;包含每个设备路径的字符串数组&lt;/returns&gt;
+            public static void GetHidDeviceList(ref List&lt;string&gt; deviceList)
+            {
+                Guid hUSB = Guid.Empty;
+                uint index = 0;
+
+                deviceList.Clear();
+                // 取得hid设备全局id
+                HidD_GetHidGuid(ref hUSB);
+                //取得一个包含所有HID接口信息集合的句柄
+                IntPtr hidInfoSet = SetupDiGetClassDevs(ref hUSB, 0, IntPtr.Zero, DIGCF.DIGCF_PRESENT | DIGCF.DIGCF_DEVICEINTERFACE);
+                if (hidInfoSet != IntPtr.Zero)
+                {
+                    SP_DEVICE_INTERFACE_DATA interfaceInfo = new SP_DEVICE_INTERFACE_DATA();
+                    interfaceInfo.cbSize = Marshal.SizeOf(interfaceInfo);
+                    //查询集合中每一个接口
+                    for (index = 0; index &lt; MAX_USB_DEVICES; index++)
+                    {
+                        //得到第index个接口信息
+                        if (SetupDiEnumDeviceInterfaces(hidInfoSet, IntPtr.Zero, ref hUSB, index, ref interfaceInfo))
+                        {
+                            int buffsize = 0;
+                            // 取得接口详细信息:第一次读取错误,但可以取得信息缓冲区的大小
+                            SetupDiGetDeviceInterfaceDetail(hidInfoSet, ref interfaceInfo, IntPtr.Zero, buffsize, ref buffsize, null);
+                            //构建接收缓冲
+                            IntPtr pDetail = Marshal.AllocHGlobal(buffsize);
+                            SP_DEVICE_INTERFACE_DETAIL_DATA detail = new SP_DEVICE_INTERFACE_DETAIL_DATA();
+                            detail.cbSize = Marshal.SizeOf(typeof(SP_DEVICE_INTERFACE_DETAIL_DATA));
+                            Marshal.StructureToPtr(detail, pDetail, false);
+                            if (SetupDiGetDeviceInterfaceDetail(hidInfoSet, ref interfaceInfo, pDetail, buffsize, ref buffsize, null))
+                            {
+                                deviceList.Add(Marshal.PtrToStringAuto((IntPtr)((int)pDetail + 4)));
+                            }
+                            Marshal.FreeHGlobal(pDetail);
+                        }
+                    }
+                }
+                SetupDiDestroyDeviceInfoList(hidInfoSet);
+                //return deviceList.ToArray();
+            }
+
+            #region&lt;连接USB返回的结构体信息&gt;
+            /// &lt;summary&gt;
+            /// 连接USB返回的结构体信息
+            /// &lt;/summary&gt;
+            public enum HID_RETURN
+            {
+                SUCCESS = 0,
+                NO_DEVICE_CONECTED,
+                DEVICE_NOT_FIND,
+                DEVICE_OPENED,
+                WRITE_FAILD,
+                READ_FAILD
+
+            }
+            #endregion
+
+
+            // 以下是调用windows的API的函数
+            /// &lt;summary&gt;
+            /// The HidD_GetHidGuid routine returns the device interface GUID for HIDClass devices.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;HidGuid&quot;&gt;a caller-allocated GUID buffer that the routine uses to return the device interface GUID for HIDClass devices.&lt;/param&gt;
+            [DllImport(&quot;hid.dll&quot;)]
+            private static extern void HidD_GetHidGuid(ref Guid HidGuid);
+
+            /// &lt;summary&gt;
+            /// The SetupDiGetClassDevs function returns a handle to a device information set that contains requested device information elements for a local machine.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;ClassGuid&quot;&gt;GUID for a device setup class or a device interface class. &lt;/param&gt;
+            /// &lt;param name=&quot;Enumerator&quot;&gt;A pointer to a NULL-terminated string that supplies the name of a PnP enumerator or a PnP device instance identifier. &lt;/param&gt;
+            /// &lt;param name=&quot;HwndParent&quot;&gt;A handle of the top-level window to be used for a user interface&lt;/param&gt;
+            /// &lt;param name=&quot;Flags&quot;&gt;A variable  that specifies control options that filter the device information elements that are added to the device information set. &lt;/param&gt;
+            /// &lt;returns&gt;a handle to a device information set &lt;/returns&gt;
+            [DllImport(&quot;setupapi.dll&quot;, SetLastError = true)]
+            private static extern IntPtr SetupDiGetClassDevs(ref Guid ClassGuid, uint Enumerator, IntPtr HwndParent, DIGCF Flags);
+
+            /// &lt;summary&gt;
+            /// The SetupDiDestroyDeviceInfoList function deletes a device information set and frees all associated memory.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;DeviceInfoSet&quot;&gt;A handle to the device information set to delete.&lt;/param&gt;
+            /// &lt;returns&gt;returns TRUE if it is successful. Otherwise, it returns FALSE &lt;/returns&gt;
+            [DllImport(&quot;setupapi.dll&quot;, CharSet = CharSet.Auto, SetLastError = true)]
+            private static extern Boolean SetupDiDestroyDeviceInfoList(IntPtr deviceInfoSet);
+
+            /// &lt;summary&gt;
+            /// The SetupDiEnumDeviceInterfaces function enumerates the device interfaces that are contained in a device information set.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;deviceInfoSet&quot;&gt;A pointer to a device information set that contains the device interfaces for which to return information&lt;/param&gt;
+            /// &lt;param name=&quot;deviceInfoData&quot;&gt;A pointer to an SP_DEVINFO_DATA structure that specifies a device information element in DeviceInfoSet&lt;/param&gt;
+            /// &lt;param name=&quot;interfaceClassGuid&quot;&gt;a GUID that specifies the device interface class for the requested interface&lt;/param&gt;
+            /// &lt;param name=&quot;memberIndex&quot;&gt;A zero-based index into the list of interfaces in the device information set&lt;/param&gt;
+            /// &lt;param name=&quot;deviceInterfaceData&quot;&gt;a caller-allocated buffer that contains a completed SP_DEVICE_INTERFACE_DATA structure that identifies an interface that meets the search parameters&lt;/param&gt;
+            /// &lt;returns&gt;&lt;/returns&gt;
+            [DllImport(&quot;setupapi.dll&quot;, CharSet = CharSet.Auto, SetLastError = true)]
+            private static extern Boolean SetupDiEnumDeviceInterfaces(IntPtr deviceInfoSet, IntPtr deviceInfoData, ref Guid interfaceClassGuid, UInt32 memberIndex, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData);
+
+            /// &lt;summary&gt;
+            /// The SetupDiGetDeviceInterfaceDetail function returns details about a device interface.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;deviceInfoSet&quot;&gt;A pointer to the device information set that contains the interface for which to retrieve details&lt;/param&gt;
+            /// &lt;param name=&quot;deviceInterfaceData&quot;&gt;A pointer to an SP_DEVICE_INTERFACE_DATA structure that specifies the interface in DeviceInfoSet for which to retrieve details&lt;/param&gt;
+            /// &lt;param name=&quot;deviceInterfaceDetailData&quot;&gt;A pointer to an SP_DEVICE_INTERFACE_DETAIL_DATA structure to receive information about the specified interface&lt;/param&gt;
+            /// &lt;param name=&quot;deviceInterfaceDetailDataSize&quot;&gt;The size of the DeviceInterfaceDetailData buffer&lt;/param&gt;
+            /// &lt;param name=&quot;requiredSize&quot;&gt;A pointer to a variable that receives the required size of the DeviceInterfaceDetailData buffer&lt;/param&gt;
+            /// &lt;param name=&quot;deviceInfoData&quot;&gt;A pointer buffer to receive information about the device that supports the requested interface&lt;/param&gt;
+            /// &lt;returns&gt;&lt;/returns&gt;
+            [DllImport(&quot;setupapi.dll&quot;, SetLastError = true, CharSet = CharSet.Auto)]
+            private static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr deviceInfoSet, ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData, IntPtr deviceInterfaceDetailData, int deviceInterfaceDetailDataSize, ref int requiredSize, SP_DEVINFO_DATA deviceInfoData);
+
+            /// &lt;summary&gt;
+            /// The HidD_GetAttributes routine returns the attributes of a specified top-level collection.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;HidDeviceObject&quot;&gt;Specifies an open handle to a top-level collection&lt;/param&gt;
+            /// &lt;param name=&quot;Attributes&quot;&gt;a caller-allocated HIDD_ATTRIBUTES structure that returns the attributes of the collection specified by HidDeviceObject&lt;/param&gt;
+            /// &lt;returns&gt;&lt;/returns&gt;
+            [DllImport(&quot;hid.dll&quot;)]
+            private static extern Boolean HidD_GetAttributes(IntPtr hidDeviceObject, out HIDD_ATTRIBUTES attributes);
+            /// &lt;summary&gt;
+            /// The HidD_GetSerialNumberString routine returns the embedded string of a top-level collection that identifies the serial number of the collection&apos;s physical device.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;HidDeviceObject&quot;&gt;Specifies an open handle to a top-level collection&lt;/param&gt;
+            /// &lt;param name=&quot;Buffer&quot;&gt;a caller-allocated buffer that the routine uses to return the requested serial number string&lt;/param&gt;
+            /// &lt;param name=&quot;BufferLength&quot;&gt;Specifies the length, in bytes, of a caller-allocated buffer provided at Buffer&lt;/param&gt;
+            /// &lt;returns&gt;&lt;/returns&gt;
+            [DllImport(&quot;hid.dll&quot;)]
+            private static extern Boolean HidD_GetSerialNumberString(IntPtr hidDeviceObject, IntPtr buffer, int bufferLength);
+
+            /// &lt;summary&gt;
+            /// The HidD_GetPreparsedData routine returns a top-level collection&apos;s preparsed data.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;hidDeviceObject&quot;&gt;Specifies an open handle to a top-level collection. &lt;/param&gt;
+            /// &lt;param name=&quot;PreparsedData&quot;&gt;Pointer to the address of a routine-allocated buffer that contains a collection&apos;s preparsed data in a _HIDP_PREPARSED_DATA structure.&lt;/param&gt;
+            /// &lt;returns&gt;HidD_GetPreparsedData returns TRUE if it succeeds; otherwise, it returns FALSE.&lt;/returns&gt;
+            [DllImport(&quot;hid.dll&quot;)]
+            private static extern Boolean HidD_GetPreparsedData(IntPtr hidDeviceObject, out IntPtr PreparsedData);
+
+            [DllImport(&quot;hid.dll&quot;)]
+            private static extern Boolean HidD_FreePreparsedData(IntPtr PreparsedData);
+
+            [DllImport(&quot;hid.dll&quot;)]
+            private static extern uint HidP_GetCaps(IntPtr PreparsedData, out HIDP_CAPS Capabilities);
+
+
+            /// &lt;summary&gt;
+            /// This function creates, opens, or truncates a file, COM port, device, service, or console.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;fileName&quot;&gt;a null-terminated string that specifies the name of the object&lt;/param&gt;
+            /// &lt;param name=&quot;desiredAccess&quot;&gt;Type of access to the object&lt;/param&gt;
+            /// &lt;param name=&quot;shareMode&quot;&gt;Share mode for object&lt;/param&gt;
+            /// &lt;param name=&quot;securityAttributes&quot;&gt;Ignored; set to NULL&lt;/param&gt;
+            /// &lt;param name=&quot;creationDisposition&quot;&gt;Action to take on files that exist, and which action to take when files do not exist&lt;/param&gt;
+            /// &lt;param name=&quot;flagsAndAttributes&quot;&gt;File attributes and flags for the file&lt;/param&gt;
+            /// &lt;param name=&quot;templateFile&quot;&gt;Ignored&lt;/param&gt;
+            /// &lt;returns&gt;An open handle to the specified file indicates success&lt;/returns&gt;
+            [DllImport(&quot;kernel32.dll&quot;, SetLastError = true)]
+            private static extern IntPtr CreateFile(string fileName, uint desiredAccess, uint shareMode, uint securityAttributes, uint creationDisposition, uint flagsAndAttributes, uint templateFile);
+
+            /// &lt;summary&gt;
+            /// This function closes an open object handle.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;hObject&quot;&gt;Handle to an open object&lt;/param&gt;
+            /// &lt;returns&gt;&lt;/returns&gt;
+            [DllImport(&quot;kernel32.dll&quot;)]
+            private static extern int CloseHandle(IntPtr hObject);
+
+            /// &lt;summary&gt;
+            /// This function reads data from a file, starting at the position indicated by the file pointer.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;file&quot;&gt;Handle to the file to be read&lt;/param&gt;
+            /// &lt;param name=&quot;buffer&quot;&gt;Pointer to the buffer that receives the data read from the file &lt;/param&gt;
+            /// &lt;param name=&quot;numberOfBytesToRead&quot;&gt;Number of bytes to be read from the file&lt;/param&gt;
+            /// &lt;param name=&quot;numberOfBytesRead&quot;&gt;Pointer to the number of bytes read&lt;/param&gt;
+            /// &lt;param name=&quot;lpOverlapped&quot;&gt;Unsupported; set to NULL&lt;/param&gt;
+            /// &lt;returns&gt;&lt;/returns&gt;
+            [DllImport(&quot;Kernel32.dll&quot;, SetLastError = true)]
+            private static extern bool ReadFile(IntPtr file, byte[] buffer, uint numberOfBytesToRead, out uint numberOfBytesRead, IntPtr lpOverlapped);
+
+            /// &lt;summary&gt;
+            ///  This function writes data to a file
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;file&quot;&gt;Handle to the file to be written to&lt;/param&gt;
+            /// &lt;param name=&quot;buffer&quot;&gt;Pointer to the buffer containing the data to write to the file&lt;/param&gt;
+            /// &lt;param name=&quot;numberOfBytesToWrite&quot;&gt;Number of bytes to write to the file&lt;/param&gt;
+            /// &lt;param name=&quot;numberOfBytesWritten&quot;&gt;Pointer to the number of bytes written by this function call&lt;/param&gt;
+            /// &lt;param name=&quot;lpOverlapped&quot;&gt;Unsupported; set to NULL&lt;/param&gt;
+            /// &lt;returns&gt;&lt;/returns&gt;
+            [DllImport(&quot;Kernel32.dll&quot;, SetLastError = true)]
+            private static extern bool WriteFile(IntPtr file, byte[] buffer, uint numberOfBytesToWrite, out uint numberOfBytesWritten, IntPtr lpOverlapped);
+
+            /// &lt;summary&gt;
+            /// Registers the device or type of device for which a window will receive notifications
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;recipient&quot;&gt;A handle to the window or service that will receive device events for the devices specified in the NotificationFilter parameter&lt;/param&gt;
+            /// &lt;param name=&quot;notificationFilter&quot;&gt;A pointer to a block of data that specifies the type of device for which notifications should be sent&lt;/param&gt;
+            /// &lt;param name=&quot;flags&quot;&gt;A Flags that specify the handle type&lt;/param&gt;
+            /// &lt;returns&gt;If the function succeeds, the return value is a device notification handle&lt;/returns&gt;
+            [DllImport(&quot;User32.dll&quot;, SetLastError = true)]
+            private static extern IntPtr RegisterDeviceNotification(IntPtr recipient, IntPtr notificationFilter, int flags);
+
+            /// &lt;summary&gt;
+            /// Closes the specified device notification handle.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;handle&quot;&gt;Device notification handle returned by the RegisterDeviceNotification function&lt;/param&gt;
+            /// &lt;returns&gt;&lt;/returns&gt;
+            [DllImport(&quot;user32.dll&quot;, SetLastError = true)]
+            private static extern bool UnregisterDeviceNotification(IntPtr handle);
+        }
+        #region
+        /// &lt;summary&gt;
+        /// SP_DEVICE_INTERFACE_DATA structure defines a device interface in a device information set.
+        /// &lt;/summary&gt;
+        public struct SP_DEVICE_INTERFACE_DATA
+        {
+            public int cbSize;
+            public Guid interfaceClassGuid;
+            public int flags;
+            public int reserved;
+        }
+
+        /// &lt;summary&gt;
+        /// SP_DEVICE_INTERFACE_DETAIL_DATA structure contains the path for a device interface.
+        /// &lt;/summary&gt;
+        [StructLayout(LayoutKind.Sequential, Pack = 2)]
+        internal struct SP_DEVICE_INTERFACE_DETAIL_DATA
+        {
+            internal int cbSize;
+            internal short devicePath;
+        }
+
+        /// &lt;summary&gt;
+        /// SP_DEVINFO_DATA structure defines a device instance that is a member of a device information set.
+        /// &lt;/summary&gt;
+        [StructLayout(LayoutKind.Sequential)]
+        public class SP_DEVINFO_DATA
+        {
+            public int cbSize = Marshal.SizeOf(typeof(SP_DEVINFO_DATA));
+            public Guid classGuid = Guid.Empty; // temp
+            public int devInst = 0; // dumy
+            public int reserved = 0;
+        }
+        /// &lt;summary&gt;
+        /// Flags controlling what is included in the device information set built by SetupDiGetClassDevs
+        /// &lt;/summary&gt;
+        public enum DIGCF
+        {
+            DIGCF_DEFAULT = 0x00000001, // only valid with DIGCF_DEVICEINTERFACE
+            DIGCF_PRESENT = 0x00000002,
+            DIGCF_ALLCLASSES = 0x00000004,
+            DIGCF_PROFILE = 0x00000008,
+            DIGCF_DEVICEINTERFACE = 0x00000010
+        }
+        /// &lt;summary&gt;
+        /// The HIDD_ATTRIBUTES structure contains vendor information about a HIDClass device
+        /// &lt;/summary&gt;
+        public struct HIDD_ATTRIBUTES
+        {
+            public int Size;
+            public ushort VendorID;
+            public ushort ProductID;
+            public ushort VersionNumber;
+        }
+
+        public struct HIDP_CAPS
+        {
+            public ushort Usage;
+            public ushort UsagePage;
+            public ushort InputReportByteLength;
+            public ushort OutputReportByteLength;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 17)]
+            public ushort[] Reserved;
+            public ushort NumberLinkCollectionNodes;
+            public ushort NumberInputButtonCaps;
+            public ushort NumberInputValueCaps;
+            public ushort NumberInputDataIndices;
+            public ushort NumberOutputButtonCaps;
+            public ushort NumberOutputValueCaps;
+            public ushort NumberOutputDataIndices;
+            public ushort NumberFeatureButtonCaps;
+            public ushort NumberFeatureValueCaps;
+            public ushort NumberFeatureDataIndices;
+        }
+        /// &lt;summary&gt;
+        /// Type of access to the object.
+        ///&lt;/summary&gt;
+        static class DESIREDACCESS
+        {
+            public const uint GENERIC_READ = 0x80000000;
+            public const uint GENERIC_WRITE = 0x40000000;
+            public const uint GENERIC_EXECUTE = 0x20000000;
+            public const uint GENERIC_ALL = 0x10000000;
+        }
+        /// &lt;summary&gt;
+        /// Action to take on files that exist, and which action to take when files do not exist.
+        /// &lt;/summary&gt;
+        static class CREATIONDISPOSITION
+        {
+            public const uint CREATE_NEW = 1;
+            public const uint CREATE_ALWAYS = 2;
+            public const uint OPEN_EXISTING = 3;
+            public const uint OPEN_ALWAYS = 4;
+            public const uint TRUNCATE_EXISTING = 5;
+        }
+        /// &lt;summary&gt;
+        /// File attributes and flags for the file.
+        /// &lt;/summary&gt;
+        static class FLAGSANDATTRIBUTES
+        {
+            public const uint FILE_FLAG_WRITE_THROUGH = 0x80000000;
+            public const uint FILE_FLAG_OVERLAPPED = 0x40000000;
+            public const uint FILE_FLAG_NO_BUFFERING = 0x20000000;
+            public const uint FILE_FLAG_RANDOM_ACCESS = 0x10000000;
+            public const uint FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000;
+            public const uint FILE_FLAG_DELETE_ON_CLOSE = 0x04000000;
+            public const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+            public const uint FILE_FLAG_POSIX_SEMANTICS = 0x01000000;
+            public const uint FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
+            public const uint FILE_FLAG_OPEN_NO_RECALL = 0x00100000;
+            public const uint FILE_FLAG_FIRST_PIPE_INSTANCE = 0x00080000;
+        }
+        /// &lt;summary&gt;
+        /// Serves as a standard header for information related to a device event reported through the WM_DEVICECHANGE message.
+        /// &lt;/summary&gt;
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DEV_BROADCAST_HDR
+        {
+            public int dbcc_size;
+            public int dbcc_devicetype;
+            public int dbcc_reserved;
+        }
+        /// &lt;summary&gt;
+        /// Contains information about a class of devices
+        /// &lt;/summary&gt;
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct DEV_BROADCAST_DEVICEINTERFACE
+        {
+            public int dbcc_size;
+            public int dbcc_devicetype;
+            public int dbcc_reserved;
+            public Guid dbcc_classguid;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 255)]
+            public string dbcc_name;
+        }
+        #endregion
+
+}
+</code></pre><p>HID类是最底层的，他直接使用了window API，这是一个C++的库，所以不能直接引用，需要使用前文提到的DllImport来导入并翻译。</p>
+<p>HIDInterface类:</p>
+<pre><code>using System;
+using System.Text;
+using System.Threading;
+using System.IO;
+using System.ComponentModel;
+
+namespace ReaderCSharp
+{
+    public class HIDInterface : IDisposable
+    {
+
+        public enum MessagesType
+        {
+            Message,
+            Error
+        }
+
+        public struct ReusltString
+        {
+            public bool Result;
+            public string message;
+        }
+
+        public struct HidDevice
+        {
+            public UInt16 vID;
+            public UInt16 pID;
+            public string serial;
+        }
+        HidDevice lowHidDevice = new HidDevice();
+
+        public delegate void DelegateDataReceived(object sender, byte[] data);
+        public DelegateDataReceived DataReceived;
+
+        public delegate void DelegateStatusConnected(object sender, bool isConnect);
+        public DelegateStatusConnected StatusConnected;
+
+        public bool bConnected = false;
+
+
+        public Hid oSp = new Hid();
+        private static HIDInterface m_oInstance;
+
+        public struct TagInfo
+        {
+            public string AntennaPort;
+            public string EPC;
+        }
+
+        public HIDInterface()
+        {
+            m_oInstance = this;
+            oSp.DataReceived = HidDataReceived;
+            oSp.DeviceRemoved = HidDeviceRemoved;
+        }
+
+        protected virtual void RaiseEventConnectedState(bool isConnect)
+        {
+            if (null != StatusConnected) StatusConnected(this, isConnect);
+        }
+
+        protected virtual void RaiseEventDataReceived(byte[] buf)
+        {
+            if (null != DataReceived) DataReceived(this, buf);
+        }
+
+        public void AutoConnect(HidDevice hidDevice)
+        {
+            lowHidDevice = hidDevice;
+            ContinueConnectFlag = true;
+
+            ReadWriteThread.DoWork += ReadWriteThread_DoWork;
+            ReadWriteThread.WorkerSupportsCancellation = true;
+            ReadWriteThread.RunWorkerAsync();   //Recommend performing USB read/write operations in a separate thread.  Otherwise,
+
+        }
+
+        public void StopAutoConnect()
+        {
+            try
+            {
+                ContinueConnectFlag = false;
+                Dispose();
+            }
+            catch
+            {
+
+            }
+        }
+
+        ~HIDInterface()
+        {
+            Dispose();
+        }
+
+        public bool Connect(HidDevice hidDevice)
+        {
+            ReusltString result = new ReusltString();
+
+            Hid.HID_RETURN hdrtn = oSp.OpenDevice(hidDevice.vID, hidDevice.pID, hidDevice.serial);
+
+            if (hdrtn == Hid.HID_RETURN.SUCCESS)
+            {
+
+                bConnected = true;
+
+                #region 消息通知
+                result.Result = true;
+                result.message = &quot;Connect Success!&quot;;
+                RaiseEventConnectedState(result.Result);
+                #endregion
+
+
+                return true;
+            }
+
+            bConnected = false;
+
+            #region 消息通知
+            result.Result = false;
+            result.message = &quot;Device Connect Error&quot;;
+            RaiseEventConnectedState(result.Result);
+
+            #endregion
+            return false;
+        }
+
+
+        public bool Send(byte[] byData)
+        {
+            byte[] sendtemp = new byte[64];
+            Array.Copy(byData, 0, sendtemp, 0, byData.Length&gt;64?64:byData.Length);
+
+            Hid.HID_RETURN hdrtn = oSp.Write(sendtemp);
+
+            if (hdrtn != Hid.HID_RETURN.SUCCESS)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool Send(string strData)
+        {
+            //获得报文的编码字节
+            byte[] data = Encoding.Unicode.GetBytes(strData);
+            return Send(data);
+        }
+
+        public bool Read()
+        {
+            if (bConnected == false) {
+                return false;
+            }
+            oSp.ReadCMD();
+            return true;
+        }
+
+
+        public void DisConnect()
+        {
+            bConnected = false;
+
+            Thread.Sleep(200);
+            if (oSp != null)
+            {
+                oSp.CloseDevice();
+            }
+        }
+
+
+        void HidDeviceRemoved(object sender, EventArgs e)
+        {
+            bConnected = false;
+            #region 消息通知
+            ReusltString result = new ReusltString();
+            result.Result = false;
+            result.message = &quot;Device Remove&quot;;
+            RaiseEventConnectedState(result.Result);
+            #endregion
+            if (oSp != null)
+            {
+                oSp.CloseDevice();
+            }
+
+        }
+
+        public void HidDataReceived(object sender, byte[] e)
+        {
+
+            try
+            {
+                //第一个字节为数据长度，因为Device 的HID数据固定长度为64字节，取有效数据
+                int length = 64;
+                byte[] buf = new byte[length];
+                Array.Copy(e, 1, buf, 0, length);
+
+                //推送数据
+                RaiseEventDataReceived(buf);
+            }
+            catch
+            {
+                #region 消息通知
+                ReusltString result = new ReusltString();
+                result.Result = false;
+                result.message = &quot;Receive Error&quot;;
+                RaiseEventConnectedState(result.Result);
+                #endregion
+            }
+
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                this.DisConnect();
+                oSp.DataReceived -= HidDataReceived;
+                oSp.DeviceRemoved -= HidDeviceRemoved;
+                ReadWriteThread.DoWork -= ReadWriteThread_DoWork;
+                ReadWriteThread.CancelAsync();
+                ReadWriteThread.Dispose();
+            }
+            catch
+            { }
+        }
+
+        Boolean ContinueConnectFlag = true;
+
+    }
+}
+</code></pre><p>使用起来非常方便，只要使用HIDInterface类就可以了，而且自动重连的功能还保留着。</p>
+<p>使用方法：</p>
+<pre><code>using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+
+namespace ReaderCSharp
+{
+    public class TagReaderManager
+    {
+
+        private static TagReaderManager shared;
+
+
+        struct connectStatusStruct
+        {
+            public bool preStatus;
+            public bool curStatus;
+        }
+
+        connectStatusStruct connectStatus = new connectStatusStruct();
+
+        //推送连接状态信息
+        public delegate void isConnectedDelegate(bool isConnected);
+        public isConnectedDelegate isConnectedFunc;
+
+
+        //推送接收数据信息
+        public delegate void PushReceiveDataDele(byte[] datas);
+        public PushReceiveDataDele pushReceiveData;
+
+
+        private byte[] receivedBuffer = null;
+
+        private HIDInterface hid;
+
+        public static TagReaderManager sharedManager()
+        {
+            if (shared == null) {
+                shared = new TagReaderManager();
+            }
+            return shared;
+        }
+
+        private TagReaderManager()
+        {
+            hid = new HIDInterface();
+        }
+
+        private bool sendingData(byte[] data) {
+            return hid.Send(data);
+        }
+
+        bool receiveData()
+        {
+            return hid.Read();
+        }
+
+        public bool connectDevice()
+        {
+
+            hid.StatusConnected = StatusConnected;
+            hid.DataReceived = DataReceived;
+
+            HIDInterface.HidDevice hidDevice = new HIDInterface.HidDevice();
+            hidDevice.vID = 0x0483;
+            hidDevice.pID = 0x5750;
+            hidDevice.serial = &quot;&quot;;
+            hid.AutoConnect(hidDevice);
+            connectionStatus = false;
+
+            return true;
+        }
+
+        //接受到数据
+        public void DataReceived(object sender, byte[] e)
+        {
+            if (e != null) {
+                Console.WriteLine(BitConverter.ToString(e));
+                receivedBuffer = e;
+            }
+        }
+
+        //状态改变接收
+        public void StatusConnected(object sender, bool isConnect)
+        {
+            connectStatus.curStatus = isConnect;
+            if (connectStatus.curStatus == connectStatus.preStatus)  //connect
+                return;
+            connectStatus.preStatus = connectStatus.curStatus;
+
+            if (connectStatus.curStatus)
+            {
+                connectionStatus = true;
+                System.Console.WriteLine(&quot;hid connected!&quot;);
+                //ReportMessage(MessagesType.Message, &quot;连接成功&quot;);
+            }
+            else //disconnect
+            {
+                connectionStatus = false;
+                System.Console.WriteLine(&quot;hid disconnected!&quot;);
+                //ReportMessage(MessagesType.Error, &quot;无法连接&quot;);
+            }
+        }
+        public bool connectionStatus{ set; get; }
+
+    }
+}
+</code></pre><p>发送就是发送，接收的话，通过一个flag和receivedBuffer来确定，很好理解～</p>
+<p>HID的代码和原作者的代码相比较有一些修改，OpenDevice这个函数中CreateFile()函数的参数有些不同，原作者是禁止其他进程共享HID描述文件的。然而这样一来我们的程序就无法成功的建立文件，并进行通信。<br>所以我怀疑可能是操作系统版本不同，所以系统对于共享权限有了不同的限制吧～</p>
+<h2 id="End"><a href="#End" class="headerlink" title="End"></a>End</h2><p>这次通过这个项目，感觉自己对软硬件通信又长进了不少。将这几个HID相关的东西做了封装之后，其他同学调用起来操控读取器就方便多了，而且最重要的是，这个库完完全全是.NET的库，所以他们可以用wpf或者winform来写界面了，可以说是非常爽了。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/study/20180717-hid-over-usb.html" data-id="ckl153wbf0043zxij57xkgu0j" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/working/" rel="tag">Working</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/life/20180728-qinghai-trip.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          青海
+        
+      </div>
+    </a>
+  
+  
+    <a href="/study/20180712-g3plc-2.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">G3PLC</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>字节对齐 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Context去年我们接手了一个G3PLC的项目，这也算是首次正正规规的做一次嵌入式了，也是我第一次在自己的电脑上安装并使用keil，有点小兴奋。 一开始我们心里还是蛮害怕的，因为协议很多，我们嵌入式基础很弱，一直担心最后这个项目无法完成。不过，到了今年6月，我们竟然真的写完了！ 俗话说得好，写程序花20%的时间，调试花80%的时间~ 当然这是他们嵌入式行业的俗话~ 于是我们开始了紧张的调试，一开">
+<meta property="og:type" content="article">
+<meta property="og:title" content="字节对齐">
+<meta property="og:url" content="http://vkwk.site/programming/20180613-data-struct-alignment.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="Context去年我们接手了一个G3PLC的项目，这也算是首次正正规规的做一次嵌入式了，也是我第一次在自己的电脑上安装并使用keil，有点小兴奋。 一开始我们心里还是蛮害怕的，因为协议很多，我们嵌入式基础很弱，一直担心最后这个项目无法完成。不过，到了今年6月，我们竟然真的写完了！ 俗话说得好，写程序花20%的时间，调试花80%的时间~ 当然这是他们嵌入式行业的俗话~ 于是我们开始了紧张的调试，一开">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-06-13T14:06:42.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.989Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="Working">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-data-struct-alignment" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20180613-data-struct-alignment.html" class="article-date">
+  <time datetime="2018-06-13T14:06:42.000Z" itemprop="datePublished">2018-06-13</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      字节对齐
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>去年我们接手了一个G3PLC的项目，这也算是首次正正规规的做一次嵌入式了，也是我第一次在自己的电脑上安装并使用keil，有点小兴奋。</p>
+<p>一开始我们心里还是蛮害怕的，因为协议很多，我们嵌入式基础很弱，一直担心最后这个项目无法完成。不过，到了今年6月，我们竟然真的写完了！</p>
+<p><code>俗话</code>说得好，写程序花20%的时间，调试花80%的时间~ 当然这是他们嵌入式行业的俗话~</p>
+<p>于是我们开始了紧张的调试，一开始还蛮顺利，遇到了问题基本上可以非常快的定位到问题点，然后也可以非常快的解决。</p>
+<p>直到…</p>
+<h3 id="StackTrace"><a href="#StackTrace" class="headerlink" title="StackTrace"></a>StackTrace</h3><p>先来看两个结构体</p>
+<p>adp.h:</p>
+<pre><code>typedef struct _ROUTINGTABLE_
+{
+    uSHORT    DestinationAddress; //16
+    uSHORT    NextHopAddress; //16
+    uSHORT    RouteCost; //16
+    unsigned    HopCount:4;
+    unsigned    WeakLinkCount:4;
+    uSHORT    ValidTime;//16
+}_ROUTINGTABLE,*_pROUTINGTABLE;
+</code></pre><p>mmu.h:</p>
+<pre><code>typedef struct _ROUTINGTABLEITEM_
+{
+    uSHORT    destination; //2
+    uSHORT nextHop; //2
+    uSHORT cost; //2
+    unsigned hopCount:4; //0.5
+    unsigned weakLinkCount:4; //0.5
+    uSHORT    ValidTime; //2
+}_ROUTINGTABLEITEM, *_pROUTINGTABLEITEM;
+</code></pre><p>这两个结构体除了名字不一样，别的都是一样的，每个变量的位置，变量的类型，所以我们觉得他们就是<code>一样的</code></p>
+<p>然后就出现了奇怪的现象～</p>
+<p>我们设置了ValidTime之后，数据变了，变得我们不认识了!</p>
+<p>我们上一行把ValidTime设置成300(<code>0x012c</code>)之后下一行用16进制打印强制转换另一个类型的ValidTime，却变成了<code>0x2c00</code></p>
+<p>我们上一行把ValidTime设置成30(<code>0x001e</code>)之后下一行用16进制打印强制转换另一个类型的ValidTime，却变成了<code>0x1e00</code></p>
+<p>是编译器欺负人？还是单片机欺负人？</p>
+<p>按理说两个类型是完全一样的，那么我传入的指针，被强制转换之后，每个变量所对应的地址也是一样的，那内容应该也是一样的呀</p>
+<h3 id="Solve"><a href="#Solve" class="headerlink" title="Solve"></a>Solve</h3><p>折腾了很长时间，最后我就强行把类型统一了，使用同一个struct。竟然就好了！</p>
+<p>于是我们发现在adp.h定义这一串struct之前有 #pragma pack(1)</p>
+<p>他的功能是字节对齐，1就代表着1字节对齐。</p>
+<p>在Keil官网上，对pack这个预编译函数有<a href="http://www.keil.com/support/man/docs/ARMCC/armcc_chr1359124990875.htm" target="_blank" rel="noopener">介绍</a>，<br>编译器默认是8字节对齐，所以只要不屑pack(1)，那就是8字节对齐的。官网这里的demo我觉得有点问题，所以我就用另一个例子来说明。</p>
+<h4 id="以下内容夹杂猜想"><a href="#以下内容夹杂猜想" class="headerlink" title="以下内容夹杂猜想"></a>以下内容夹杂猜想</h4><p>adp.h:</p>
+<pre><code>#pragma pack(1)
+......
+
+typedef struct _ROUTINGTABLE_
+{
+    uSHORT    DestinationAddress; //16
+    uSHORT    NextHopAddress; //16
+    uSHORT    RouteCost; //16
+    unsigned    HopCount:4;
+    unsigned    WeakLinkCount:4;
+    uSHORT    ValidTime;//16
+}_ROUTINGTABLE,*_pROUTINGTABLE;
+</code></pre><p>这里按照1个字节对齐，在内存里就是这样的</p>
+<pre><code>|-----------0-----------|
+ -----------------------
+|     Destination_H     |
+|     Destination_L     |
+|    NextHopAddress_H   |
+|    NextHopAddress_L   |
+|      RouteCost_H      |
+|      RouteCost_L      |
+|HopCount,WeakLinkCount |
+|      ValidTime_H      |
+|      ValidTime_L      |
+</code></pre><p>sizeof(_ROUTINGTABLE)==9，这个应该是理想情况，但是如果没有pack(1)</p>
+<p>mmu.h:</p>
+<pre><code>typedef struct _ROUTINGTABLEITEM_
+{
+    uSHORT    destination; //2
+    uSHORT nextHop; //2
+    uSHORT cost; //2
+    unsigned hopCount:4; //0.5
+    unsigned weakLinkCount:4; //0.5
+    uSHORT    ValidTime; //2
+}_ROUTINGTABLEITEM, *_pROUTINGTABLEITEM;
+</code></pre><p>这里我觉得应该是按照2个字节对齐(虽然官网说的是8),在内存里就是这样的</p>
+<pre><code>|     0    |    1    |
+ --------------------
+|   dstH   |  dstL   |
+|   NextH  |  NextL  |
+|   cstH   |  cstL   |
+|hopC\weakC|    *    |
+|  ValTimH | ValTimL |
+</code></pre><p>sizeof(_ROUTINGTABLEITEM)==10，于是字节错位了!</p>
+<p>我们使用_ROUTINGTABLEITEM这个结构体对validTime赋值，会操作结构体内存的8、9位字节</p>
+<p>使用错误案例validTime=300(0x012c),short在内存中存放为0x2c,0x01(倒着的~)</p>
+<p>于是结构体为dstH,dstL,NxtH,NxtL,cstH,cstL,hop,weak,0x00,0x2c,0x01</p>
+<p>但是使用_ROUTINGTABLE这个结构体去读取validTime的时候，会读取结构体内存的7、8位字节</p>
+<p>也就是dst[7]=00,dst[8]=0x2c,于是validTime变成了0x2c00，超大的数字!</p>
+<h3 id="One-more-thing"><a href="#One-more-thing" class="headerlink" title="One more thing"></a>One more thing</h3><p>这里bit field对齐夹杂了我的部分猜测，因为我查了很多很多很多资料，也没有找到比特操作的明确说明～</p>
+<p>所以我就参考了这个<a href="http://www.catb.org/esr/structure-packing/" target="_blank" rel="noopener">牛逼的网页</a></p>
+<p>假设bit是自动按序排列的，只要几个bit field大小总和小于等于一个字节，就使用一个字节空间，<br>而如果超过一个字节，那就需要把超的哪个bit field赶到下一个字节中去。</p>
+<h3 id="End"><a href="#End" class="headerlink" title="End"></a>End</h3><p>所以嵌入式是真的难啊！</p>
+<p>我们这几天的调试还遇到了一些坑，过几天总结一下再来说说～</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20180613-data-struct-alignment.html" data-id="ckl153wb2003dzxijlylgb8gd" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/working/" rel="tag">Working</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/study/20180712-g3plc-2.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          G3PLC
+        
+      </div>
+    </a>
+  
+  
+    <a href="/programming/20180607-android-bluetooth-shit.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Android 蓝牙之坑(1)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

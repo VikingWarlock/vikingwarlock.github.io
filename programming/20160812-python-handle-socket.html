@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Python 处理字节流 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Python is fucking awesome!!">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python 处理字节流">
+<meta property="og:url" content="http://vkwk.site/programming/20160812-python-handle-socket.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="Python is fucking awesome!!">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-08-11T23:45:34.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.993Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-python-handle-socket" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20160812-python-handle-socket.html" class="article-date">
+  <time datetime="2016-08-11T23:45:34.000Z" itemprop="datePublished">2016-08-11</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Python 处理字节流
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="python处理字节的点点滴滴"><a href="#python处理字节的点点滴滴" class="headerlink" title="python处理字节的点点滴滴"></a>python处理字节的点点滴滴</h2><p>python有多爽,我就不说了,反正想得到的事情,基本都有办法用python来解决,当然还有一个很重要的优点: 写python不用编译～</p>
+<h2 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h2><ol>
+<li>之前毕业设计做的是<code>SMS4的实现与安全性分析</code>.安全性分析是什么鬼？查了查书,好像是用有特征的原文来进行测试……,具体的我也忘记了.当时就琢磨,怎么样可以做一个酷炫的安全性分析呢？</li>
+<li>公司的新产品是一款智能硬件,它会通过<code>TCP</code>给服务器发送指令(当然不是熟悉的HTTP请求,是传说中的字节流)</li>
+</ol>
+<h2 id="Requirement"><a href="#Requirement" class="headerlink" title="Requirement"></a>Requirement</h2><ol>
+<li>commands+re : 这个组合可以轻轻松松的提取出命令行程序的有用信息</li>
+<li>binascii : 这个东西可以轻松的产生各种各样和二进制有关或者和ascii有关的字符串</li>
+<li>struct : 超级牛逼的解包模块,瞬间把一个字节流解成元组</li>
+</ol>
+<h2 id="OK-Let’s-go"><a href="#OK-Let’s-go" class="headerlink" title="OK, Let’s go"></a>OK, Let’s go</h2><h4 id="commands-re"><a href="#commands-re" class="headerlink" title="commands+re"></a>commands+re</h4><p>commands.output(cmd),cmd是shell命令<code>我也不知道windows的命令可以不可以～～</code><br>这一条可以把运行结果返回出来(字符串形式)</p>
+<p>然后用re来做正则匹配,再搭配一些split(),replace()之类的操作字符串的函数,就可以提取出一个命令行程序中有用的信息了.</p>
+<h4 id="binascii"><a href="#binascii" class="headerlink" title="binascii"></a>binascii</h4><pre><code>binascii.b2a_hex(data)
+binascii.hexlify(data)
+</code></pre><p><code>data</code>就是原始字符串,假设就是”abcde”<br>返回的也是字符串,不过是16进制的字符串”6162636465”</p>
+<pre><code>binascii.a2b_hex(hexstr)
+binascii.unhexlify(hexstr)
+</code></pre><p>这个函数就是反过来的<br>‘hexstr’是16进制的字符串,假定说是”6162636465”<br>返回的字符串就是他们所对应的ascii的字符,就是”abcde”</p>
+<p>这有啥用嘞?</p>
+<p><code>做测试！</code></p>
+<p>让下位机发送一条指令可能还蛮复杂的,或者蛮浪费资源什么的,这样调试服务器代价会比较大.使用binascii来制作测试数据再好不过了.</p>
+<p>假设下位机发送的数据是”0xaa,0xbb,0xcc,0x12,0x34,0xdd,0xee,0xff”</p>
+<p>我们就可以模拟一条</p>
+<pre><code>a=&quot;aabbcc1234ddeeff&quot;
+b=asciibin.a2b_hex(a)
+</code></pre><p>b就是模拟了服务器收到socket字节流.真方便</p>
+<h4 id="struct"><a href="#struct" class="headerlink" title="struct"></a>struct</h4><p>收到字节流,根据协议,得知其中的8个字节是double,4个字节是float.</p>
+<p>嗯,字节转整形还是有办法的,那么转成浮点型应该怎么转呢？？</p>
+<p>import struct吧</p>
+<p>将python数据封装成字节流</p>
+<pre><code>struct.pack(format,argvs...)
+</code></pre><p>将字节流解析成python数据类型</p>
+<pre><code>struct.unpack(format,string)
+</code></pre><p><code>format</code>很有意思,简单说就是解析规则.</p>
+<p>比如解析成float,就写’f’</p>
+<p>解析成double,就写成’d’</p>
+<p>那么一个数据流里面既有float又有double怎么办呢?</p>
+<p>嗯,截取字符串嘛！</p>
+<pre><code>struct.unpack(&apos;f&apos;,s1[0:4])
+struct.unpack(&apos;d&apos;,s1[4:12])
+</code></pre><p>哈哈,我一开始也是这样写的,后面章鱼兄跟我说,format里面可以写很多东西</p>
+<pre><code>struct.unpack(&apos;fd&apos;,s1)
+</code></pre><p>这个会直接返回(r1,r2),其中r1就是那个float,r2就是那个double</p>
+<p>真的好方便</p>
+<p>附表一张</p>
+<table>
+<thead>
+<tr>
+<th>format</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>f</td>
+<td>float</td>
+</tr>
+<tr>
+<td>d</td>
+<td>double</td>
+</tr>
+<tr>
+<td>c</td>
+<td>char</td>
+</tr>
+<tr>
+<td>i</td>
+<td>int</td>
+</tr>
+<tr>
+<td>l</td>
+<td>long</td>
+</tr>
+<tr>
+<td>3s</td>
+<td>长度为3的字符串</td>
+</tr>
+<tr>
+<td>4s</td>
+<td>长度为4的字符串</td>
+</tr>
+<tr>
+<td>5s</td>
+<td>长度为5的字符串</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<p>至于struct.pack()嘛,既然format都有了,那么应该不难理解了,在python里面试一试就明白了</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20160812-python-handle-socket.html" data-id="ckl153wbv0054zxijujqgsauy" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/" rel="tag">Python</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/programming/20160815-bluetooth-speeder.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          蓝牙测速
+        
+      </div>
+    </a>
+  
+  
+    <a href="/programming/20160726-wechat-develop-sucks.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">微信服务号的消息处理</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

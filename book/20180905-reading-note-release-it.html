@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>第一篇读书笔记 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="发布!软件的设计与部署">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第一篇读书笔记">
+<meta property="og:url" content="http://vkwk.site/book/20180905-reading-note-release-it.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="发布!软件的设计与部署">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-09-04T21:47:27.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.994Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="笔记">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-reading-note-release-it" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/book/20180905-reading-note-release-it.html" class="article-date">
+  <time datetime="2018-09-04T21:47:27.000Z" itemprop="datePublished">2018-09-04</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/book/">书记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      第一篇读书笔记
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>这是第一篇读书笔记，最近看了几本有点厉害的书。我担心我看了之后又忘记了，所以还是有必要记录一下的。</p>
+<h3 id="Note"><a href="#Note" class="headerlink" title="Note"></a>Note</h3><p>这本书是一个很多年工作经验的架构师大神根据自己的各种亲身经历总结出来的一些东西。总共分为4个部分:稳定性、容量、一般设计问题、运营。</p>
+<p>目前呢，我才读到了178页，差不多是第四部分运营的一半位置，所以这本书终于将要被我读完了！</p>
+<p>这本书读的时间很长，因为他不是一本工具书，它是一本和小说一样的书，通过各种故事来引出问题和解决方案。有时候一些情况是我现在无法理解的，因为我还没有接触过作者大大所做的那种超高并发，大用户，等复杂场景。也有可能是因为作者大大做的系统都是从最最最底层开始一直垒到最顶层的，而我现在都是使用各种框架，把最难的部分或者最可能出问题的部分交给了其他大佬们去解决了。<br>其实这个并不是最好的习惯，因为在书的P35就提到了一个点<code>厂商API库</code>，这里说有时候我们使用的第三方API被封装的特别漂亮，但是其实他的实现非常丑陋，甚至存在很多的缺陷～但是其实我们这些小角色现在也只能抱怨抱怨，因为并没有能力和时间去修改它～～</p>
+<h3 id="Chapters"><a href="#Chapters" class="headerlink" title="Chapters"></a>Chapters</h3><p>讲一下这本书的四个部分都是什么具体内容吧～</p>
+<p>目录其实可以在网上查到，所以我也不说了。但是这四个部分讲的内容大概是什么我倒可以稍微概括一下，因为说不定未来遇到了问题，可以很针对性的去找对应的章节。</p>
+<p><code>注意，下面被这样标记的部分就是书中原话的意思～</code></p>
+<hr>
+<h4 id="第一章-稳定性"><a href="#第一章-稳定性" class="headerlink" title="第一章:稳定性"></a>第一章:稳定性</h4><p>这一章介绍了稳定性反模式和稳定性模式，其中稳定性反模式指的是一些设计会导致导致没考虑到的小问题被方法，导致系统快速的崩溃。而使用稳定性模式，就可以降低这种崩溃的风险。</p>
+<p>在介绍稳定性的时候讲到了<code>故障链</code>，这其实很好理解，一个很小的故障，导致了另一个未知故障的发生，进而导致另另一个未知故障的发生，进而满满的发现所有的模块都爆了。就像什么火箭飞船飞机什么的，一开始发现一个很小的异常，然后慢慢地慢慢地，全屏都是error然后爆炸了～</p>
+<p>这一章讲到了一个凌晨5点崩溃的故事，说的是一个服务器每天凌晨5点都会死掉。我相信这套系统在测试阶段应该没有出现过这种问题，但是在生产服务器中，却出现了这个崩溃问题。作者通过获取故障服务器的线程转储(我并不知道这是什么)，tcpdump抓包，分析得到这个崩溃是由TCP链接的不对称导致的。<br>TCP如果双方都不通知对方，这个链接中断了，那么即使物理线路真的断了，那他们也以为没有断。而在生产服务器中，又一个防火墙角色的存在，导致情况变得更加复杂。</p>
+<p>防火墙检查到外部节点超过若干时间没有和本机通信了，便会移除防火墙里面的记录，导致后续外部节点再次通信产生失败。这这个例子中，防火墙保护了数据库服务器，而链接数据库服务器的应用服务器，由于过了一个晚上的休息时间，使得防火墙中对应的记录都被删除了，所以应用服务器再也无法跟数据库服务器进行通信了，于是这些线程全部被阻塞了，最终系统崩溃了。</p>
+<p>虽然这个故事讲的并不是生产环境和测试环境的事情，但是我觉得这个故事我对他印象还是很深刻的。</p>
+<p>之后说了<code>连锁反应</code>， 假设分布式服务器集群有若干台，他们的故障概率为x，那么当某一台服务器挂了之后，剩下的负载服务器的故障概率就会升高，因为他们分担了之前服务器的负载。以此类推，当更多的服务器挂掉之后，剩下的服务器的故障概率会变得高的可怕，说不定就会导致系统崩溃。</p>
+<p><code>用户是可怕的</code>，<code>每个用户都好用了更多的内存</code>，这应该不需要再解释了。</p>
+<p><code>无共享</code>,在软件设计的时候我还是挺喜欢使用单例的，因为这是一个全局的东西，可以被各个模块共享使用。但是在系统架构时，为了可扩展性，会希望无共享架构。但是无共享会导致失效备援能力变弱。所以大佬的建议是:<code>减少共享资源</code>。我理解就是除了那些必不可少的资源需要共享，其他的资源可以通过让两个应用服务器彼此做备援服务器的方法来实现援救。</p>
+<p><code>去耦合中间件</code>这个不好解释，总是中间件很有用就对了，’通过完全姐耦合来避免大部分失效模式’</p>
+<p>这一章写了那么多，因为他竟然有94页！所以看得我心力憔悴。</p>
+<hr>
+<h4 id="第二章-容量"><a href="#第二章-容量" class="headerlink" title="第二章:容量"></a>第二章:容量</h4><p>这一章看名字就大概明白意思了。各种暴力环境呗。大用户，高并发，大容量储存，之类的…</p>
+<p>写几个印象深刻的点：</p>
+<p><code>容量的神话</code>: 1.”CPU很便宜”。但是机箱很贵啊！4个CPU用一个机箱，那5个CPU可能就需要2个机箱，此时每个CPU的成本就被抬高了啊。2.”存储很便宜”。但是服务器不止一台，而且需要考虑RAID的影响，操作系统大小，应用程序大小等等。所以购买的容量远远小于可以储存数据的容量。根据乘法效应来算，这储存还是挺贵的。3.”带宽很便宜”。现在一般两种带宽服务，按时间计费，固定带宽不限流量，每月支付固定的金额；按流量支付，每月流量小于一个阈值，就可以支付稍低的固定费用，但是如果流量超出则会付出惨痛的代价。于是讨厌的爬虫脚本，或者服务器中传输垃圾信息(每次1kb，累计起来也是钱啊)都会导致带宽变得很昂贵。</p>
+<p><code>JSON的黑暗面</code>这个其实不难理解，因为有的程序员会使用json来执行函数或者命令，这个操作是很有风险的，万一个黑客猜到了，就完蛋了。</p>
+<p><code>昂贵的空白图片</code>,<code>多余的HTML表格</code>,<code>刷新按钮</code>,<code>空白</code>-&gt;<code>这些都是HTML中浪费的空间</code>，他们虽然不会影响什么，但是，会浪费很多的流量(都是钱啊！)</p>
+<p>‘海外来的RMI’， 这个故事我还没看懂～。～</p>
+<hr>
+<h4 id="第三章-一般设计问题"><a href="#第三章-一般设计问题" class="headerlink" title="第三章:一般设计问题"></a>第三章:一般设计问题</h4><p><code>虚拟IP地址</code>，使用虚拟IP地址，可以用作失效备援。一堆失效备援服务器一个作为主动运行服务器，另一台作为备援服务器，他们有自己真实的IP，也会有一个虚拟IP。但是虚拟IP只会指向正在运作的主要服务器，当主要服务器故障之后，便通过将备用服务器迁移到这个虚拟IP上来保证服务可用。</p>
+<hr>
+<h4 id="第四章-运营"><a href="#第四章-运营" class="headerlink" title="第四章:运营"></a>第四章:运营</h4><p>这一章还没看完，不着急。</p>
+<hr>
+<p><code>注意，上面被这样标记的部分就是书中原话的意思～</code></p>
+<h3 id="End"><a href="#End" class="headerlink" title="End"></a>End</h3><p>嗯，这是看了那么多一口气写的笔记，所以花了我2小时的时间，下次读书笔记还是一边读一遍写吧！</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/book/20180905-reading-note-release-it.html" data-id="ckl153wc0005fzxijx3fgzipe" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/note/" rel="tag">笔记</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/book/20180908-reading-note-release-it-2.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          透明度、适应
+        
+      </div>
+    </a>
+  
+  
+    <a href="/programming/20180826-BLEoE-1.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">BLEoE(1)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

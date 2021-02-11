@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="VikingWarlock&#39;s daily life and develop experience">
+<meta property="og:type" content="website">
+<meta property="og:title" content="VikingWarlock">
+<meta property="og:url" content="http://vkwk.site/page/8/index.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="VikingWarlock&#39;s daily life and develop experience">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="Viking Warlock">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-static-library-remover" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20160509-static-library-remover.html" class="article-date">
+  <time datetime="2016-05-09T15:17:54.000Z" itemprop="datePublished">2016-05-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/programming/20160509-static-library-remover.html">删除静态库中的静态库～</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="iOS静态库开发的故事"><a href="#iOS静态库开发的故事" class="headerlink" title="iOS静态库开发的故事"></a>iOS静态库开发的故事</h3><p>假设我们要做一个SDK给别人用,有两个选择,framework包,a包.他们有啥区别？framework包里面可以包含图片资源.a包里面只能是纯代码.所以a文件的容量真的很小很小.</p>
+<p><code>万一</code>,我们制作静态库的时候调用了第三方库,在打包的时候,如果不把这些第三方库去掉,会有什么效果呢？</p>
+<p>使用我们SDK的人如果也使用了相同的第三方库,就会导致在编译的时候,出现duplicate信号,因为两个相同的类出现了,所以呢,如果一定要使用a包,只能手动的将包内的第三方库给去掉.</p>
+<p>OK, 我们来看看删掉一个<code>.a</code>静态库中的某个第三方静态库需要怎么搞</p>
+<h4 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h4><p>我们做了一个<code>.a</code>静态库,其中包含了</p>
+<pre><code>Masonary
+JFMinimalNotification
+FCFileManager
+.....
+</code></pre><p>第一步:</p>
+<pre><code>lipo * -thin [platform] dir/new.a
+</code></pre><p>platform是平台,什么x86啊,arm之类的</p>
+<pre><code>ar -t dir/new.a
+</code></pre><p>解压出来</p>
+<pre><code>cd dir &amp;&amp; ar xv new.a
+</code></pre><p>跳转到那个文件夹</p>
+<pre><code>rm *MAS*
+rm JF*
+rm ...
+</code></pre><p>删啊删啊删</p>
+<pre><code>cd ..
+ar rcs lib_1.a dir/*.o 
+</code></pre><p>重新再打包成lib_1.a</p>
+<pre><code>lipo -create ... -output new_clean_static_lib.a
+</code></pre><p>最后生成多平台的静态库</p>
+<hr>
+<h3 id="这有什么问题嘛？"><a href="#这有什么问题嘛？" class="headerlink" title="这有什么问题嘛？"></a>这有什么问题嘛？</h3><p>嗯,你发布的SDK肯定是多平台的,也就是说,你需要有多少个平台,上面的事情就得做多少次～～</p>
+<p><code>So</code>,我写了一个Python脚本专门来解决这个难过的事情,<a href="https://github.com/VikingWarlock/VKStaticLibraryRemover" target="_blank" rel="noopener">VKRemove</a></p>
+<h4 id="Function-1"><a href="#Function-1" class="headerlink" title="Function 1"></a>Function 1</h4><pre><code>python VKRemove.py -lp xxx.a
+</code></pre><p>返回这个静态库里面包含的平台</p>
+<pre><code>This library contains:i386 armv7 x86_64 arm64
+</code></pre><h4 id="Function-2"><a href="#Function-2" class="headerlink" title="Function 2"></a>Function 2</h4><pre><code>python VKRemove.py -lb xxx.a
+</code></pre><p>返回这个静态库里面所有的库</p>
+<pre><code>...&apos;View+MASAdditions.o&apos;, &apos;ViewController+MASAdditions.o&apos;, &apos;XuanWheelBluetoothManager.o&apos;...
+</code></pre><p>感觉很高端了对吧?</p>
+<h4 id="Function-3"><a href="#Function-3" class="headerlink" title="Function 3"></a>Function 3</h4><pre><code>python VKRemove.py -i XuanWheelSDK.a -rm FCFileManager HMSegmentedControl- JFMinimalNotification   UIView+Round UIImage+ImageEffects.o MAS
+</code></pre><p>这会生成一个xxx.a.new,它包含了之前所有的平台,并且去掉了指定的所有第三方库.</p>
+<p>感觉更高端了吧?</p>
+<h4 id="Function-4"><a href="#Function-4" class="headerlink" title="Function 4"></a>Function 4</h4><pre><code>python VKRemove.py -i XuanWheelSDK.a -from clear.txt
+</code></pre><p>每次都输入那么长的命令太难过了,不如从文件输入吧～</p>
+<p>当然咯,Function 3中的<code>-</code>是干什么用的,可以直接去<a href="https://github.com/VikingWarlock/VKStaticLibraryRemover" target="_blank" rel="noopener">Github</a>上面看,虽然是英文的～</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20160509-static-library-remover.html" data-id="ckl153wcg006dzxijqz0mtm8i" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-arc-gradient-progress-view" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20160506-arc-gradient-progress-view.html" class="article-date">
+  <time datetime="2016-05-06T15:15:20.000Z" itemprop="datePublished">2016-05-06</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/programming/20160506-arc-gradient-progress-view.html">弧形渐变进度条</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="https://github.com/VikingWarlock/VKArcGradientProgressView/raw/master/demoGIF.gif" alt="Demo"></p>
+<h2 id="这个是效果图"><a href="#这个是效果图" class="headerlink" title="这个是效果图"></a>这个是效果图</h2><p>我们来说说看这个怎么做出来吧！？</p>
+<p>先介绍一下它的思路</p>
+<p><code>想象</code>背景是一个调色板,然后在调色板上面涂满了黑色,然后在黑色上面抠形状出来,那扣掉的部分,不就是渐变的了嘛!</p>
+<h2 id="实现一下吧"><a href="#实现一下吧" class="headerlink" title="实现一下吧"></a>实现一下吧</h2><pre><code>UIBezierPath *path;
+</code></pre><p>这个当然是实现路径的</p>
+<pre><code>CALayer *gradientLayer;
+</code></pre><p>这个是调色板</p>
+<pre><code>CAShapeLayer *progressLayer;
+</code></pre><p>这个是抠掉的路径的图层</p>
+<p>那么先说说渐变调色板是啥个思路吧</p>
+<p>把调色板切成左右两份儿,左边从红渐变到黄再到绿(左下到右上)；右边的从绿渐变到蓝再到紫(左上到右下)</p>
+<p>设置完毕颜色之后,加个蒙版,就可以实现抠图的效果了</p>
+<pre><code>[gradientLayer setMask:progressLayer];
+</code></pre><p>设置一下抠图路径咯</p>
+<pre><code>progressLayer.path=path.CGPath;
+</code></pre><p>那么咋个动起来呢？</p>
+<p>噢对,加个计时器！我一开始也是这样想的,后面发现它的工作效率贼低贼低,所以就放弃了,转而使用CATransaction,它在动起来的时候,<code>CPU竟然没有动</code>！！而如果使用NSTimer的话,那动画帧数越高,动画效果越好,CPU飚的越高</p>
+<pre><code>[CATransaction begin];
+[CATransaction setDisableActions:!(animate&amp;&amp;enableAnimate)];
+[CATransaction setAnimationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseIn]];
+[CATransaction setAnimationDuration:time];
+progressLayer.strokeEnd=data/(max-min);
+[CATransaction commit];
+</code></pre><h2 id="最后说一句"><a href="#最后说一句" class="headerlink" title="最后说一句"></a>最后说一句</h2><p>讲这些是为了宣传开源库的～</p>
+<p>因为这个开源库被部署在了cocoaPod上面,用起来还是蛮方便的</p>
+<p><a href="https://github.com/VikingWarlock/VKArcGradientProgressView" target="_blank" rel="noopener">Github Link</a></p>
+<p><a href="https://cocoapods.org/pods/VKArcGradientProgressView" target="_blank" rel="noopener">CocoaPod Link</a></p>
+<h4 id="喜欢的话点个赞也不错～"><a href="#喜欢的话点个赞也不错～" class="headerlink" title="喜欢的话点个赞也不错～"></a>喜欢的话点个赞也不错～</h4>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20160506-arc-gradient-progress-view.html" data-id="ckl153wao002hzxijgb693zbq" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-2015-ways-to-go" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/life/20160101-2015-ways-to-go.html" class="article-date">
+  <time datetime="2016-01-01T00:44:03.000Z" itemprop="datePublished">2016-01-01</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/life/">日记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/life/20160101-2015-ways-to-go.html">2015 Ways to go</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="2015年也过去了-写总结这个习惯坚持了6年-还算是蛮有毅力的"><a href="#2015年也过去了-写总结这个习惯坚持了6年-还算是蛮有毅力的" class="headerlink" title="2015年也过去了,写总结这个习惯坚持了6年,还算是蛮有毅力的."></a>2015年也过去了,写总结这个习惯坚持了6年,还算是蛮有毅力的.</h2><p>今年过的并不算顺利.遇到了很多不顺心的事情,但是回头来想一想,发生的一切事情都是有原因的.困境不会无缘无故的出现,一定是之前自己做过的事情导致的,所以不用怪自己运气不好,要怪就怪自己造孽.既来之,则安之.一条路被堵上了,没有必要蹲在角落哭泣,没有必要抱怨老天不公平,好好的把另一条路走下去,避免自己再次造孽.</p>
+<h2 id="那么-来说说看2015年都发生了一些什么事情吧"><a href="#那么-来说说看2015年都发生了一些什么事情吧" class="headerlink" title="那么,来说说看2015年都发生了一些什么事情吧."></a>那么,来说说看2015年都发生了一些什么事情吧.</h2><p>2015年初,过着3个项目同时跑的生活,体验着接外包的生活,虽然很累,但是收获颇大,不仅挣到了不少钱,还学会了如何去坑甲方.</p>
+<p>进入大三下,课不多,但是也没有什么时间拿来休闲,算是蛮辛苦的一个学期.在这期间把蓝牙好好的学了一遍,把NFC好好的学了一遍,做了很多小app,尝试了很多新的东西.</p>
+<p>抱着不在乎的态度去参加了腾讯和阿里的招聘,结果被狠狠的拒绝了.不过虽然被面试官打击的面无体肤,但是好歹让他纠正了我很多错误的观念,教会了我一些新的东西.</p>
+<p>暑假借着电子设计的比赛,早早的回到了学校,做着自己喜欢做的事情.其实我早己知道自己保研很悬,但是一直在自我麻痹,默默的做了很多无关紧要的功能,就是为了后来的离开做准备的……</p>
+<p>到了忐忑的9月,一边继续麻痹自己,一边做各种小动作,直到最后名单确定下来,我的心才平静了下来,开始认真的复习,开始安心的走剩下的那一条路了.</p>
+<p>考研复习,确实很辛苦,遇到熟人,我总是会“语重心长”的告诉他们:“能保研,千万不要去考研啊！”一开始还有电脑,复习累了,便去打打游戏,算是补偿一下自己.后来发现,玩游戏会带来一时的快乐,但是也会影响第二天一整天的状态,所以干脆就把电脑寄存给小伙伴了.老实说,几个月复习期间,手,是真的会痒的.总觉得好像去敲敲键盘,写点儿什么好玩的东西.后来即使是登录到服务器去”apt-get upgrade”也会让我感到很爽.</p>
+<p>考研复习和平时的期末复习状态其实也差不多,都是一开始普通的复习,越临近考试日期,复习的效率就越高,也越拼.暂且不管考研的结果如何,这次考研复习,让我又找到了过去学习的激情,中心体会到了,做出一道题目心里会无比的开心的感觉.</p>
+<p>这大学的四年,就还剩一个学期,在这7个学期中,目标总是在不断的变化,这个变化不是不断的升级,而只是不断的更换.</p>
+<p><code>最开始想做一个黑客,后来想做钢铁侠战衣,最后想成为优秀的开发者.</code></p>
+<p>最开始想要出国,之后变成了工作,最后想保研.最后发现,一件事情都没有做到底,一件事情也没有做成.可是现在呢？对于未来,我依然没有明确的打算,考研考的很糟糕,那未来是工作还是出国呢？其实我也不知道,长久以来我一直把自己的行程灌的很满,就是为了防止自己会去有时间瞎想.可是,现在确实得好好的对未来规划一番了……</p>
+<p><code>永远都不会有穷途末路的时候,无论未来有多迷茫,一定会有道路留下.</code><br><code>Choose the right way, and go for it.</code></p>
+<p>2016.1.1<br>Viking Warlock</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/life/20160101-2015-ways-to-go.html" data-id="ckl153w9s000gzxijg7y3sosz" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-social-cridet" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/life/20150126-social-cridet.html" class="article-date">
+  <time datetime="2015-01-26T00:45:16.000Z" itemprop="datePublished">2015-01-26</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/life/">日记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/life/20150126-social-cridet.html">社会信用卡已透支</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>古时候摔倒了,摔伤了的人,会被路人扶起来,被好心人带回家疗伤.待他伤好之后,会感激这个救助他的好心人.现在大家看到躺着的人,不敢去扶,不敢去救助那个好心人,因为那个地上躺着的人,不知道是真的弱势群体,还是一个伪弱势群体.</p>
+<p>陌生人手机没电了,急着需要联系他人,问你借用一下手机,看起来并没有什么问题,但是他可能会假装打电话最后骗走你的手机.</p>
+<p>有人问你要钱回家,并答应到家之后把钱寄给你,这也有可能是骗你的.</p>
+<p>人之初,性本善.我们每个人都是善良的,都有一种本能想去帮助其他人,帮助那些需要帮助的人,帮助弱势群体.可是,总有些自以为聪明的人能看到“商机”,利用人们本来的善,来牟利来做恶.让人与人之间变的不信任,让我们看不清这个世界.</p>
+<p>可能会有一日,现在幸运着的我们,也会变成一个不幸的人,会真的在路上摔倒摔晕,会真的需要借用一下手机,会真的需要一个好心人的救助,可是在那个时候,人与人之间的信任还存在嘛？可能早就被那些小人们刷透支了吧.</p>
+<p><code>以上全是吐槽…</code></p>
+<p>要说这现象已经有无数的人分析过了,至于怎么解决.官方的做法是,大力传播正能量,让大家有信心,相信世界还是美好的,人与人之间还是可以信任的,坏人还是少的…我觉得呢,应该和老炮儿一样,能帮忙就帮一下.没被骗,心里开心；被骗了,就当是积个德.</p>
+<p>扶了人被讹,就认命吧,就当你是攒人品,谁要你倒霉碰到个王八犊子呢？</p>
+<p>借手机打电话被骗走,就认了吧,就当是攒人品,谁让那王八犊子没手机还刚好喜欢你的呢？<br>…</p>
+<p>对于执法部门,我觉得对待这种案子不能就这么不了了之,就应该翻录像,调集各种资源查出真相！暂且不说什么纳税人的事儿,这些坏人做的不仅仅是骗了些小钱的事儿,而是在慢性的破坏社会,一点一点的让社会笼罩在一片不信任之中.</p>
+<p>我自以为是个有爱心的人,但是相比起来我更爱手机…所以,摔倒了的人我会扶,但是想要我借你手机用,想都不要想</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/life/20150126-social-cridet.html" data-id="ckl153wc8005yzxijx2g233k7" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/diary/" rel="tag">日记</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-2014-Like-A-Fool" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/life/20150101-2014-Like-A-Fool.html" class="article-date">
+  <time datetime="2015-01-01T00:00:16.000Z" itemprop="datePublished">2015-01-01</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/life/">日记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/life/20150101-2014-Like-A-Fool.html">2014 Like A Fool</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Like-A-Fool"><a href="#Like-A-Fool" class="headerlink" title="Like A Fool"></a>Like A Fool</h2><p>就在几分钟前,2014年过去了.</p>
+<p>看着去年今日写的最后两段话,心里只有默默的苦笑.是啊2014年充满了纠结,走一步看一步,但是我已经不相信那句安慰人的话了.</p>
+<p>每学期开始时都信心满满的认为可以做出很多东西来,到头来不是客户跳水不要了,就是被各种天杀的学业压力挤得头破血流.其实不该去责怪客户,不该去责怪学校,所有的事情都不是无缘无故的发生的,既然会发生在自己身上,那必然是有自己的原因.而且在我身上发生了那么多次,想必就是自己的问题了.</p>
+<p>过往每年的第一天,都是我用日志来抱怨一年,来匆匆的记录一年的日子.但是今天,我不想再抱怨什么了.因为失败的人只会找理由,而要想成功就得找方法,得反思,得自我诊断.</p>
+<p><code>学业</code>.从大一下开始,成绩什么的就处于下降状态,虽然下降的平稳,但是至少也不是那么让人开心.每次说到这个问题,只会一再的逃避,理直气壮的用工作忙来搪塞.借口！既然有人可以一边学习成为股票经纪人,一边推销医疗器械,一边照顾儿子,一边卖血,一边排队抢收容所的床位.我这一个没有儿子不用卖血还有床睡的人,又凭什么不能兼顾学习和工作呢！</p>
+<p><code>工作</code>.忙,这是真的,忙的里焦外嫩的.虽然效率算是高的,态度是端正的,可是结果呢？没有结果,都是空.即使是客户不想要了,怪谁呢？人傻就是得多吃几次亏,做做廉价劳动力.自己乐呵乐呵的花上几个月,每天晚上干到1、2点.结果什么都没有捞着,还在自我安慰说：学到东西就好了……然后呢？继续被骗咯！继续做点儿废物咯！继续安慰自己咯！光会拍代码,有条毛用,大家看不懂又用不到,<code>stupid</code>.</p>
+<p><code>生活</code>.饭不好好吃,觉不好好睡.然后还是把责任归为忙.做了死人还能忙嘛,<code>stupid</code>.乱花钱,挣都挣不到还乱花,我都没脸看账单了…就应该全都存成定期！就应该把所有的密码都忘了！就应该天天吃食堂.会员卡,办条毛啊,用个1年还不是只能送人或者注销了！</p>
+<p><code>情感</code>.呵呵～4个月魔咒还是没有打破吧.<code>stupid</code>！不会谈恋爱,谈条毛啊.没空谈恋爱,谈条毛啊.没情商谈恋爱,谈条毛啊.你以为你以为的就是你以为的？别整天去想这些有的没的.该来的,会来的.不属于你的,抢来也不开心.</p>
+<h2 id="杂"><a href="#杂" class="headerlink" title="杂."></a>杂.</h2><p>自以为是个幽默的人,其实伤害了别人都没意识到.诶,他们是在苦笑啊！stupid.</p>
+<p>自以为是个app开发的高手,其实app都快没人用了.诶,别人的软件我都懒的下载,自己还做的那么开心！<code>stupid</code>.</p>
+<p>自以为开的玩笑大家都能理解,其实怨恨已经积累了很久了.诶,自己幼稚还要把别人想的幼稚呐！<code>stupid</code>.</p>
+<p>诊断报告.<code>stupid enough</code>.</p>
+<p>这么傻的度过了一年,也是该改改了,不然简直so no face.</p>
+<p>Anyway,这一年终归是辛苦的,是压抑的,是心情最糟糕的.即便如此,VK依旧感激那些在这一年中曾带给我短暂欢乐的人；也感激那些在我失意,失落,进入低谷,临近崩溃,看不到希望,极度抑郁的时候可以说一些话或者做一些事情来拽我一把的人.最后,感激那些忍受了我一年无理取闹,还不嫌弃我的人们.</p>
+<p>2015,不敢奢望什么,只求能有所改变.</p>
+<p><code>2015,IEC Let’s Rock N Roll; Alinone , FancyPost , HaloWheel , I’m looking forward to these.</code></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/life/20150101-2014-Like-A-Fool.html" data-id="ckl153w9p000ezxij01vrlslh" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-shaoxing-funny" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/life/20140127-shaoxing-funny.html" class="article-date">
+  <time datetime="2014-01-26T23:51:16.000Z" itemprop="datePublished">2014-01-26</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/life/">日记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/life/20140127-shaoxing-funny.html">绍兴囧事们</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>离家37小时,还是发生了很多的囧事的.</p>
+<p>比如说闹钟设晚了1小时</p>
+<p>比如说为了纸巾去KFC买了一份粥</p>
+<p>比如说鑫鑫带了一副三国杀没动过</p>
+<p>比如说硕硕带了电脑连机都没有开过</p>
+<p>比如说仑仑用百度地图查到的公交车站总是换名字</p>
+<p>比如说兔兔一口气睡了12＋小时</p>
+<p>比如说光光带的装满礼物的行李箱被塞满了大家脱下来的衣服</p>
+<p>比如说燕燕一直在做”小姨妈”</p>
+<p>比如说彪彪竟然在游乐园里得了结膜炎</p>
+<p>比如说猪猪被小朋友摸了猪屁股</p>
+<p>除了上述个人囧事,其实还有一些组队完成的囧事,比如说</p>
+<p>“两个欧巴好和谐哟,在一起”,这种话离开了科大还是第一次听到,没想到现在的小朋友那么牛逼,懂得挺多的嘛</p>
+<p>9个成年人陪一个小朋友去儿童乐园,结果还是成年人玩得多,据说,有个成年人还玩哭了</p>
+<p>打扑克,两副牌出现了4个大王,还打得挺high的</p>
+<p>一个通知父爱泛滥把所有叫他”粑比”的小伙伴都当做孩子一样</p>
+<p>我们住到了一个打开门就能发现地上有各种”上门服务”的小卡片的酒店,虽然大家都很想打一个电话试试看,但是都没有胆子</p>
+<p>三个小伙伴貌似花了2.1元坐了相同路线的公交车,便高兴了很久,一直在算比那些打车的小伙伴赚了多少.不过,好像本来可以两个人不用付钱的嘛.</p>
+<p>由于床被扑克占领了,我只能在地上眯一会,结果有个同志做俯卧撑,我还以为地震了,立刻吓尿了.</p>
+<p>最精彩的当然是最后的速度与激情咯,具体的就不说了,一句话总结就是”打车打得早,不如打得巧”！</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/life/20140127-shaoxing-funny.html" data-id="ckl153wc7005vzxijfnhxwj8e" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/diary/" rel="tag">日记</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-2013" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/life/20140101-2013.html" class="article-date">
+  <time datetime="2014-01-01T00:34:16.000Z" itemprop="datePublished">2014-01-01</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/life/">日记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/life/20140101-2013.html">2013</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="坚持每年来一发日志"><a href="#坚持每年来一发日志" class="headerlink" title="坚持每年来一发日志."></a>坚持每年来一发日志.</h3><p>  2013年是从生下来到现在为止不在家乡的时间最长的一年.</p>
+<p>  掰指一算,嗯,世界末日后我们又成功的活了一年.</p>
+<p>  看看以前写的年末日志,感觉以前总是可以记得生活中的点点滴滴,而现在,好像感觉一年下来什么难忘的事情都没有发生.一个小伙伴说“高中是一个班的高中,大学是一个人的大学”,大学和同班同学,异班同学交流的频率降低了,和老是的交流也少了,即便是去食堂,也只是用手指点某一个菜,不会与阿姨有过多的交流.看到同班同学只是找个手,说一句Hi,然后就没有然后了,大家又各干各的,各走各的路,各玩各的手机……所以记不起什么难忘的事情很正常.</p>
+<p>  高中的时候,要学习永远学不好的语文,计算到头大的数学,分析到崩溃的理综.以为到了大学终于可以抛弃这一种发神经似的填鸭子式的学习,可以去学习自己喜欢的东西,坐点实际能够应用的东西.但是,却发现,大学依然要发神经似的学习,不同的是,没有人把你当作鸭子一样喂,你得自己喂自己你不想吃的东西.所以,兴趣与任务再一次冲突了.</p>
+<p>  我总是问自己,大学,只是学学课本这些东西嘛？应该不是的吧,如果只是学学课本的东西,图书馆就只要造5楼就好了,摆什么课外书啊,全都摆成考试要用的书不就完了.乔布斯的养父在车库里面鼓励他“很高兴你能做点东西出来”,我想我们的家长可能会这样鼓励我们“很高兴你能做点题出来”.</p>
+<p>  为了做点东西出来,我开始学会了翘课,熬夜这些坏习惯.当然牺牲了这些东西之后,确实做了点东西出来,只是没给发布罢了.我这是典型的向超级大宅男发展的节奏,对着电脑做出各种奇形怪状的动作和表情,遇到了很多的问题也很快乐,因为”Happiness is not the absence of problems, but dealing with them”.</p>
+<p>  抽象完了,该实例化了.记得在2010-2011的时候,就买了objective-C的书了,可是当时由于没有Mac,就给了自己一个理由,没有好好的去学习它.今年下定决心要攻克它,于是在一个夜晚,去图书馆借了10+本objective-C和Xcode的书.面向对象是个难过的坎,即使编程了6、7年,也完全无法理解这种要建立一堆类的编程模式,在每个类的代码里面找不到main().于是就花了一个月专门攻克语法,利用软件技术的上课时间,课外做作业的时间,呵呵,略懂了.</p>
+<p>  稍微学会了点开发技术之后,就自己做点儿好玩的东西,自娱自乐.直到小伙伴告诉我有一个在做iOS的工作室在招新,终于结束了自娱自乐的状态,也进入了大学的第一个组织——飞凡动力.在临近期末的时候咱们接到了第一个活儿：Deskit,我也不明白这个破名字是什么意思,不过作为练手的项目,Deskit真的给了我很大的帮助.学校要我们在考试之前做出来,呵呵,开什么玩笑,这么大的东西,你去做做看.于是考试和暑假都耗给Deskit了,结果开学后学校一直都没有给发布,拖了一个学期了,我也就不去想它了.</p>
+<p>  不过通过另一个小伙伴,我又去了另一个工作室,这是一个保证可以发布的工作室,还见到了一个iOS的大神.可是……为什么活一来就是期末啊……</p>
+<p>  诶,数一数这学期出了几次校门？10次？好像没到……去了几次市区？1次……这个真的是宅男的模式啊,食堂吃上瘾了,特别是看了各种吃东西的片子之后,总是可以大口大口的吃.“不被时间和社会束缚,幸福地填满空腹之时,那一瞬间,他已变得唯我独尊,自由自在,不被任何人所打扰,毫无顾虑地享受美食的孤高的行为.这种行为,正是现代人都被平等赋予的最大的安慰”.一边大口吃这些不同的食物,一边在心里假惺惺的告诉自己,真好吃,真美味,应该是比这个境界还要高吧.不过这样积攒了不少的钱,因为食堂确实比我爱吃的东西便宜很多.</p>
+<p>在学校里看到了真人版的郭静,可是音乐节没有看到真人版的田馥甄.参加了寝室风采大赛,上台当着一大把人的面水过表演,竟然拿了一等奖,可是奖品就一个山寨杯子和一个被识别为硬盘的优盘.参加GIS大赛竟然也意外的得到了奖,不过为什么奖品只有无线鼠标,还是粉红色的.</p>
+<p>上半学期在学校里面体重巨减,而下半学期体重剧增,这是为什么呢？只能说明这学期真的很辛苦,工作学习不运动,这就是增肥的好条件呐.</p>
+<p>即使忙出翔了,好像还是和家乡的小伙伴保持着联系,比如说大肥猪、ak,兔子,仑仑仑.虽然你们有的还在家乡,有的可以经常互相见面,有的在繁华的都市过着白富美的生活,也没有忘记在鸟不拉屎的地方做宅男的我,过年等着吃我的新产品吧.</p>
+<p>就像冬天会不想洗澡,也会不想停止洗澡；就像没吃过辣的人会不敢吃辣,也会停不下来吃辣；就像没下水过的人会不敢游泳,也会爱上游泳.很多的事情只有拿出勇气做一次,才会知道其实它是有乐趣的,它是简单的,它是值得你为之奋斗的.</p>
+<p>看到下学期的课,表面上都和数学没有关系,其实每一门都是数学课,真的不知道什么时候才能拜托数学的困扰.至于选课,我觉得已经是浮云了.我有经历过一个学期都是冷门老师,也在体验一个学期都是热门老师,可是结果,我觉得都是差不多的,即使每一节课都在听,每一次作业都在做,可是到了期末发现脑子里面还是什么都不剩,到头来还是要自己花几周的时间去抱佛脚,去复习一遍,去死记硬背一遍.这可能就是为什么每一个老师在开学第一节课都告诉大家,大学的学习是靠自己的.因为他们也承认自己没有什么用处,只是提供了一个解答的环境罢了.</p>
+<p>2014年肯定会更加的纠结.托福,GRE,iOS,GPA,怎么均衡他们呢？走一步看一步吧,要相信everything is gonna be alright!</p>
+<p>目标每年都是一样的,就是每个学期都做点儿东西出来,2014年一定是一个充实的一年,感觉有很多的东西会被我做出来.班里的小伙伴们大家一起加油吧.IEC的小伙伴们下学期也一起加油吧！为我们的推广大业而奋斗,为App大赛而奋斗！</p>
+<h3 id="这是凑字数"><a href="#这是凑字数" class="headerlink" title="(这是凑字数)"></a>(这是凑字数)</h3>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/life/20140101-2013.html" data-id="ckl153w9k000azxij28l6tc5s" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-old-days" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/life/20131109-old-days.html" class="article-date">
+  <time datetime="2013-11-09T02:37:16.000Z" itemprop="datePublished">2013-11-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/life/">日记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/life/20131109-old-days.html">Old Days</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Old Days<br>It’s been a long time since last time I wrote something that doesn’t relate to scholar, program in high school. </p>
+<p>I miss the old days, when I stayed up till 2 or 3 o’clock writing some compositions that I like .</p>
+<p>I miss the old days, when we rode bike and said goodbye to each other every day.</p>
+<p>I miss the old days, when we do sports exercise every day.</p>
+<p>I miss the old days, when we are not just a collection of classmates or a collection of boys and girls,but we are a team , an A team , a team that couldn’t be defeated.</p>
+<p>I miss the old days, when you cheer me up when I am down. you’d always like to make phone call or text to me when I don’t have a hope on everything.</p>
+<p>I can well remember we have celebrated your birthdays and mine .We never forget picking up gifts. </p>
+<p>I can well remember how we pushed each other to be better.</p>
+<p>I will not forget the milk tea shop we went, the computer game we played together ,the problems we discussed.</p>
+<p>The moments we spent together are unforgettable. The joy we made ,the sorrow we faced ,the challenges we faced ,the secrets we kept for each other. These sort of things would be engraved on my mind.</p>
+<p>Thank you my old friends. Even now we are separated in different parts of the country , I’d like to make conference call with you guys no matter how much it will cost, cause I need you.</p>
+<p>I hope we will be friends forever.</p>
+<p>Looking forward to the vocation.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/life/20131109-old-days.html" data-id="ckl153wbq004yzxijro4jdzj9" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/diary/" rel="tag">日记</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-2012-The-Ends-The-Start" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/life/20130101-2012-The-Ends-The-Start.html" class="article-date">
+  <time datetime="2013-01-01T00:02:06.000Z" itemprop="datePublished">2013-01-01</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/life/">日记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/life/20130101-2012-The-Ends-The-Start.html">2012 The End, The Start</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>《2012》圆满度过了,我们都是幸存者,世界没有走到尽头,我们没有看到末日.</p>
+<p>2012全年都是紧张的度过的吧.起初,每天到学校看到倒计时牌写着距离高考的剩余时间；然后,每天起床数着距离进入大学的时间,想要充实的过完＂最后一个＂暑假；最后等待世界末日的到来.<br>好在玛雅人和我们开了玩笑,让我有了下一个暑假,让我可以继续人生,让这个恐惧的心情有了一个Happy Ending.</p>
+<p>回眸2012,半个高三的生活还是充满激情的,每天固定的吃饭时间,固定的晚餐,固定的作息,机械的作息时间表当然不会记载趣事：</p>
+<p>还记得晚自习课间偷偷催同学拿出iPhone4S,然后围着它调戏Siri.</p>
+<p>还记得做题做烦的时候谈谈暑假计划.</p>
+<p>还记得午休和考试前的休息时间,我就像个推销员似的挨个推销Apple产品.</p>
+<p>还记得和两位密友去吃吃小吃暴暴粗口,顺便讨论学习大计.</p>
+<p>还记得互相大叫＂用功帝＂,＂哇,都做完了＂,＂你就疯去吧＂,＂人类已经无法阻止你了＂……这一类为自己加油,顺便夸奖他人的话.</p>
+<p>半个高三短暂,但是过的异常充实,即使记得也写不下了.</p>
+<p>至于暑假,就颓着呗,当作最后一个假期,怎能不好好休闲一番.写了个飞行棋游戏,还不能战斗；旅游能吸引我的不是风景,而是打扑克；在家里做了食物给同学们吃,结果很难吃……反正是颓废颓废嘛,结果如何不重要.</p>
+<p>一晃,暑假没了,进入＂天堂＂——大学.两周军训感觉好辛苦,好痛苦,鞋子特别薄,我的脚都要爆掉了,吃饭还要一个排一个排轮流.教官还特别喜欢刁难我们,所以训练的时候总想把教官做掉,要他再敢欺负我们.训练的过于劳累,导致不想吃饭,于是每天的伙食费低得惊人,感觉满自豪的.</p>
+<p>两周的烂军训结束后,真正开始体会＂天堂＂生活.过着过着就想大骂：呸！这算哪门子天堂,还是很苦嘛！不过相比较高中初中,真的轻松多啦,没有满课,没有每天都交作业,周末也是完整的,真的算是高中的天堂了.</p>
+<p>然后进入篮球赛,小组赛全败,也对,我们都不够高,身高拼不过,体重也拼不过,那我们班有什么优势呢？哦对,我们女生最多……女生多有什么效果呢？很显然：男生少了,这样要出篮球高手的概率也就低了.</p>
+<p>在这偏僻的小村庄学习,吃不到意大利面,麦当劳,吃不起肉,于是就只能拮据一周,周末去大撮一顿,恨不得把下一周的所有空间吃了.</p>
+<p>每天晚上都和爸妈发几条信息,不是思念只是随便聊聊,因为进入大学便是准备好与父母分开的Start.</p>
+<p>如果一学期不见他们,突然看见的话,衰老会很明显,但是如果时不时来个Facetime,就不会有一种瞬间苍老的感觉.说到这,就一种感激之情,关爱之情涌上来；真的他们老了,他们的辉煌要end了,我们的辉煌要start了,是时候多关心他们了,多为他们着想了.</p>
+<p>打开QQ空间看着今年写下的日志,感觉自己真的成长了不少,以前回忆过去只会觉得原来的自己真的好白痴,竟然会做这么傻的事情.而今年,真的算是成熟了.这一年的日志有励志的,有纪录心情的,不像一年以前那样,发一堆小儿科的小把戏,小发现,小科技在空间里了.</p>
+<p>2012年在成都留下了我的足迹,也把我的朋友圈从浙江扩大到全国,让我知道了什么叫做独立生活.我体验了赤字的生活,也体验了小资生活,有巨勤奋的经历,也有浑浑噩噩的日子.我不用像《北京青年》一样重走青春路,因为这半年我已经体验过大部分青春啦.</p>
+<p>玛雅人的预言或许改变了这一年我们对生活的态度,让我们不敢去浪费每一天,把每一天都当最后一天去度过；或许也改变了那些已经离我们而去的人在临终前的心态；或许改变了整个世界,让旧的世界走向末日.</p>
+<p>2013即将到来,虽然那个令人悚然的预言没有了,但是危险还是处处存在的,平平安安过完这一年这是每个人的愿望.而这平静的一年一定会因我们的存在变的不平静.2013 Now Start！</p>
+<p>2012,这一页翻过去了,伴随着电影的恐慌,记载着学习生活的欢乐与紧张,承载这辛酸苦楚.它会变成一页黄纸留在心中,最后留下一句：The End.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/life/20130101-2012-The-Ends-The-Start.html" data-id="ckl153w9a0003zxijclkoe4zz" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-try-try" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/wtf/20121022-try-try.html" class="article-date">
+  <time datetime="2012-10-22T00:43:16.000Z" itemprop="datePublished">2012-10-22</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/wtf/">什么鬼</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/wtf/20121022-try-try.html">浅尝辄止？</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>开学扬言要每天刷英语,结果一看,每次都错一堆,感觉做它还不如背单词；于是就去背单词,没有再做过.</p>
+<p>上个月信心满满说出,＂我一定能进凝聚＂,＂为了凝聚,拼了＂,之类的话,到了现在我觉得,我好像要放弃了.题目实在太难了,我要解决这些问题一定会花费我大量时间,而且没有设备,书太多…</p>
+<p>月初还信心满满的捧着数字电子基础扬言要超过某人,结果看到cmos门电路傻眼了,根本不懂这是什么,于是一周没碰它了.</p>
+<p>我现在真的需要问自己,我真的是遇到了难题,困难就会退缩嘛？</p>
+<p>初中时候信息学竞赛,看到动态规划就逃.</p>
+<p>买了java的书,想和Tim一起写java游戏,可是没看懂,就放弃了.</p>
+<p>高中时候信息学竞赛,看到基础题就逃.</p>
+<p>高中篮球队,嫌太累,训练一周就退出了.</p>
+<p>实验题太抽象,最后做,来不及就不做.</p>
+<p>……</p>
+<p>这真是浅尝辄止啊,遇到难题就后退.</p>
+<p>我这一路上因为怕累怕吃苦放弃的太多了,现在我又开始扬言了,我要吃掉C++\C#.NET\java,鬼知道能坚持多久.</p>
+<p>原本想借助同学的力量来推自己一把,可是发现,每次想要用力的时候总能找到各种借口：＂我自学的,太辛苦了＂,＂没人问啊＂,＂好像基础不够啊＂.</p>
+<p>它们阻碍了我.我怎么样才能冲破障碍了？</p>
+<p>诱惑,到处都是诱惑.</p>
+<p>那么离开喧闹,去个极度安静的地方？</p>
+<p>烦躁,随时随地烦躁.</p>
+<p>那么保持平和,不去和他人过分交流？</p>
+<p>寂寞,经常感觉寂寞.</p>
+<p>这无法避免的,寂寞的人才冷静思考？</p>
+<p>…</p>
+<p>方法有很多,慢慢寻找,希望几天之后不要把C++和C#加到放弃列表中去.因为我要深入,不再浅尝.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/wtf/20121022-try-try.html" data-id="ckl153wci006hzxij1lo1jyk0" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/diary/" rel="tag">日记</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+  <nav id="page-nav">
+    <a class="extend prev" rel="prev" href="/page/7/">&amp;laquo; __(&#39;prev&#39;)</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/9/">__(&#39;next&#39;) &amp;raquo;</a>
+  </nav>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

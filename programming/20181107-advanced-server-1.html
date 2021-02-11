@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>厉害一些的服务器设计(1) | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Context这段时间看了一些架构师的书，感觉是时候练习一下了。 一开始订了一个小目标，做一个http+socket的服务器 后来想了想，把celery加进来 再想把redis也加进来 最后这个就变成了一个更厉害一点儿的系统了 httpnginxuwsgidjango-&gt;rabbitMQ,redis,celerytwistedsocket 由于最近还看了微服务的书，所以最后甚至想做一个分布式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="厉害一些的服务器设计(1)">
+<meta property="og:url" content="http://vkwk.site/programming/20181107-advanced-server-1.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="Context这段时间看了一些架构师的书，感觉是时候练习一下了。 一开始订了一个小目标，做一个http+socket的服务器 后来想了想，把celery加进来 再想把redis也加进来 最后这个就变成了一个更厉害一点儿的系统了 httpnginxuwsgidjango-&gt;rabbitMQ,redis,celerytwistedsocket 由于最近还看了微服务的书，所以最后甚至想做一个分布式">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-11-06T23:50:21.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.983Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-advanced-server-1" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20181107-advanced-server-1.html" class="article-date">
+  <time datetime="2018-11-06T23:50:21.000Z" itemprop="datePublished">2018-11-06</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      厉害一些的服务器设计(1)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>这段时间看了一些架构师的书，感觉是时候练习一下了。</p>
+<p>一开始订了一个小目标，做一个http+socket的服务器</p>
+<p>后来想了想，把celery加进来</p>
+<p>再想把redis也加进来</p>
+<p>最后这个就变成了一个更厉害一点儿的系统了</p>
+<p>http<->nginx<->uwsgi<->django-&gt;rabbitMQ,redis,celery<->twisted<->socket</-></-></-></-></-></p>
+<p>由于最近还看了微服务的书，所以最后甚至想做一个分布式的服务器了！</p>
+<h4 id="Plan"><a href="#Plan" class="headerlink" title="Plan"></a>Plan</h4><p>这里不讲方案的演变过程，直接讲最后最后确定的方案。</p>
+<p>一台高性能服务器装有 nginx,uwsgi,django,rabbitMQ,redis,twisted,celery</p>
+<p>两台低配服务器有 twisted和celery</p>
+<p>把这整个项目想像成，共享单车(非蓝牙开锁的)服务器架构～高性能服务器用来接受所有的http请求(手机app)，所有服务器的twisted用来处理socket请求(共享单车)</p>
+<p>其中celery用来做部分异步操作（假设有发短信，发送单车指令）的负载均衡</p>
+<p>rabbitMQ用来做celery和twisted的Message Broker。celery的相关操作是自带的，不需要再写很多。而twisted集成rabbitMQ就需要用到pika，需要写一些东西才行。</p>
+<p>redis用来做celery的task记录备份数据库，可有可无。</p>
+<p>nginx,uwsgi,django不用介绍，就那些功能</p>
+<p>最后还要使用JMeter来进行压力测试</p>
+<h3 id="Let’s-do-it"><a href="#Let’s-do-it" class="headerlink" title="Let’s do it"></a>Let’s do it</h3><p>其实这个项目这样理一下，还是挺清晰的。</p>
+<p>django就这么搭建，uwsgi和nginx就这么配置。</p>
+<p>celery是最近重新好好看了文档之后又拾起来的东西，之前没有好好地用过它，只是知道它好像可以做异步操作而已。</p>
+<h4 id="celery"><a href="#celery" class="headerlink" title="celery"></a>celery</h4><p><a href="http://docs.celeryproject.org/en/latest/index.html" target="_blank" rel="noopener">celery</a>在介绍中就写了Broker，很明显他也是用消息队列来做进程间通信的。</p>
+<p>celery对django有非常好的支持，具体的配置就要看<a href="http://docs.celeryproject.org/en/latest/django/index.html" target="_blank" rel="noopener">这里</a></p>
+<p>这里来一段假装是发送短信的异步操作，print这个地方改成一个向SMS网关发送请求的代码，就可以做到发送短信了。因为django的view里面的处理函数需要返回一个response，<br>但是django自带的发送网络请求的函数都是同步的，所以用了celery就可以很快速的返回一个response给客户端，在此同时再去发送短信，这就不会导致一个http请求产生多方等待的问题。</p>
+<p>tasks.py中定义任务:</p>
+<pre><code>@shared_task
+def send_sms(number, code):
+    print &quot;sending sms to {} with code {}&quot;.format(number, code)
+</code></pre><p>view.py中调用:</p>
+<pre><code>@csrf_exempt
+@require_POST
+def send_sms(request):
+    parameter = request.POST
+    tasks.send_sms.delay(parameter[&quot;code&quot;], random.randint(1000, 9999))
+    return JsonResponse({&quot;status&quot;: &quot;succeed&quot;})
+</code></pre><p>配置的话，还挺重要的，我搞了一个celeryConfig.py，因为最后会涉及多个服务器一起部署，各自的参数会不一样，所以用一个外置文件来配置，很舒服(要把它gitignore了)</p>
+<p>celeryConfig.py:</p>
+<pre><code>from __future__ import absolute_import
+
+broker_url = &apos;amqp://***:***@10.139.***.***:5672/myvhost&apos;
+result_backend = &apos;redis://10.139.***.***:6379/0&apos;
+
+task_serializer = &apos;json&apos;
+result_serializer = &apos;json&apos;
+accept_content = [&apos;json&apos;]
+enable_utc = True
+
+
+result_expires = 60
+</code></pre><p>这样配置rabbitMQ和redis的服务器路径就很方便了。</p>
+<h4 id="redis"><a href="#redis" class="headerlink" title="redis"></a>redis</h4><p>上面说到的celery用到了10.139.***这样的内网ip，没错，现在多台服务器是共用一个redis的，所以需要配置redis让他可以对<code>外</code>开放</p>
+<p>网上很多都说去掉bind 127.0.0.1，关闭protect-mode就好，但是我觉得这个方法并不好，因为直接去掉这一行，会向全网开放，而我只想在内网开放，所以只要把</p>
+<pre><code>bind 127.0.0.1
+</code></pre><p>改为</p>
+<pre><code>bind 10.139.*** 127.0.0.1
+</code></pre><p>就好了。</p>
+<p>但是这样运行起来说不定还是不行，可能会”could not connect”，因为linux还没有把这个端口对外开放。使用这个明令把6379端口给开了</p>
+<pre><code>/sbin/iptables -I INPUT -p tcp --dport 6379 -j ACCEPT
+</code></pre><p>然后保存一下</p>
+<pre><code>/etc/rc.d/init.d/iptables save
+</code></pre><p>这样应该就ok了</p>
+<p>某天晚上想给别人装个逼，打开终端一看，redis跪了。之后发现redis只要运行一段时间就跪了，而且杀不掉，只能重启。之后回到寝室看了报错内容</p>
+<pre><code>Failed opening the RDB file dump.rdb (in server root dir /*****) for saving: Permission denied
+</code></pre><p>其实问题很简单，只要把这句话里面的路径的文件的权限给了就行，就会自动恢复。</p>
+<h4 id="nginx-uwsgi-django"><a href="#nginx-uwsgi-django" class="headerlink" title="nginx uwsgi django"></a>nginx uwsgi django</h4><p>这三个东西可以说是用的很熟悉了的～</p>
+<p>不过这次想要玩点儿新花样。nginx和uwsgi之间使用socket来通信，而不是直接端口映射</p>
+<p>uwsgi.ini:</p>
+<pre><code># mysite_uwsgi.ini file
+[uwsgi]
+
+# Django-related settings
+# the base directory (full path)
+chdir           = /***
+# Django&apos;s wsgi file
+wsgi-file          = httpServer/wsgi.py
+# the virtualenv (full path)
+home            = /***/venv
+
+master          = true
+
+processes       = 10
+# the socket (use the full path to be safe
+socket          = /***/advServer.sock
+
+chmod-socket    = 664
+uid = www-data
+gid = www-data
+
+vacuum          = true
+
+workers=24
+listen=65535
+</code></pre><p>启动之后，nginx访问这个socket总是说permission denied，即便使用的sudo也不行。后来查到资料说，要他们有相同的user和group才行。但是我明明在ini中已经设置了和nginx相同的user和group，却还是报错。</p>
+<p>于是最后我只能开大招了：</p>
+<pre><code>sudo chown www-data:www-data /***/advServer.sock
+</code></pre><p>真的有效</p>
+<h4 id="rabbitMQ"><a href="#rabbitMQ" class="headerlink" title="rabbitMQ"></a>rabbitMQ</h4><p>先说说Mac安装了rabbitMQ之后会出现的一个很小很小的问题吧～</p>
+<p>运行了./rabbitmq-server之后没反应，过了一会儿提示</p>
+<pre><code>error:epmd error for host ******: timeout
+</code></pre><p>这个很简单，只要把这个<strong>*</strong>加入host就好了</p>
+<p>修改/etc/hosts，增加：</p>
+<pre><code>127.0.0.1 *****
+</code></pre><p>再试即可！</p>
+<h3 id="Pause"><a href="#Pause" class="headerlink" title="Pause"></a>Pause</h3><p>今天先整理到这里，明天再把twisted，pika部分的内容整理出来！</p>
+<p>睡觉～</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20181107-advanced-server-1.html" data-id="ckl153wa7001fzxijlovjzk0c" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/" rel="tag">Python</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/programming/20181108-advanced-server-2.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          厉害一些的服务器设计(2)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/life/20181002-20181001-mood.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">2018-10-01 心情</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

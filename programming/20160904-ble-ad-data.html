@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>BLE的广播帧 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Bluetooth makes the world tighter">
+<meta property="og:type" content="article">
+<meta property="og:title" content="BLE的广播帧">
+<meta property="og:url" content="http://vkwk.site/programming/20160904-ble-ad-data.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="Bluetooth makes the world tighter">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://vvk.ixuanlun.com/bluetoothAD_Data.png">
+<meta property="article:published_time" content="2016-09-03T17:36:15.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.987Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="蓝牙">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://vvk.ixuanlun.com/bluetoothAD_Data.png">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-ble-ad-data" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20160904-ble-ad-data.html" class="article-date">
+  <time datetime="2016-09-03T17:36:15.000Z" itemprop="datePublished">2016-09-03</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      BLE的广播帧
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>之前还以为BLE也就GATT那些东西嘛,没什么好说的了</p>
+<p><code>其实</code></p>
+<p>BLE或者说,蓝牙,的广播帧还是有很多很多奥秘的.还是有些东西可以拿来琢磨琢磨,学习学习</p>
+<h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>至于为什么要突然学习这个东西,肯定是和新产品有关系的,具体的,可以等上市之后,买来一个试试看啊,哈哈哈哈哈哈</p>
+<p>另一个原因,这个东西的官方文档真的很难找,至少在 <a href="http://www.bluetooth.com" target="_blank" rel="noopener">www.bluetooth.com</a> 上面我就没有看到讲述广播帧结构的文档,最后在TI的一个文档中,终于找到了相关的内容.</p>
+<p>平时用BLE只要是在连接成功之后,搜索Service和Characteristc,后进行读写操作.这样的工作模式,只能一对一,不能做到一对多.但是利用了广播信息,可以做到一对多的发送消息…虽然这时候不能反过来写入.</p>
+<h3 id="Let’s-go"><a href="#Let’s-go" class="headerlink" title="Let’s go"></a>Let’s go</h3><p>我们先来上一张图片,看看Bluetooth到底广播了什么吧</p>
+<p><img src="http://vvk.ixuanlun.com/bluetoothAD_Data.png" alt="AD"></p>
+<p>我是做上位机软件开发的,所以只关心应用层的东西,那么上面图片中,iOS和Android能被处理的数据是标红的那一段</p>
+<p>一共31个字节,看起来好像不是很足够,但是由于协议是规定好了的,所以对应的位置表示对应的数据,还是够用的.</p>
+<p>说说我们熟悉的一些广播信息吧:(iOS端CoreBluetooth的广播帧字典的Key)</p>
+<pre><code>1.LocalName (外设名称)
+2.ServiceUUIDs (Service列表)
+3.ManufacturerData (制造商数据)
+4.IsConnectable (是否可连)
+</code></pre><p>下面再给点儿我第一次知道的广播信息类型:</p>
+<pre><code>1.ServiceData (某个Service的广播数据)
+2.TxPowerLevel (传输信号强度~.~,用来计算损耗用...好像暂时没啥用处,反正我也不会算)
+3.OverflowServiceUUIDs (没懂他和ServiceUUIDs的区别~.~)
+4.SolicitedServiceUUIDs (貌似和从设备没啥关系~.~)
+</code></pre><p>说实话,平时用到的只有ServiceUUIDs,因为我们用这个来过滤出来我们需要的蓝牙外设,也用这个来区分不同的硬件.</p>
+<p>LocalName的话iOS和Android都已经自动提取并封装成简单的接口了</p>
+<p>上面是软件层面的东西,我们来看看硬件层面的呗~</p>
+<p>一个广播帧会有很多类型的数据,每个类型有自己的<code>type</code>,上位机也是通过type字段来分辨数据是UUID还是Name或者其他的东西~</p>
+<p>每一类数据都由3部分组成:</p>
+<pre><code>1.length of data (这个type的总长度)
+2.type (定义type)
+3.data (根据type的协议来填入数据)
+</code></pre><p>这里简单的列举几个type:</p>
+<pre><code>0x02 不完整的16位UUID
+0x04 不完整的32位UUID
+0x06 不完整的128位UUID
+0x08 设备全名
+0x16 16位UUID的Service Data
+0x20 32位UUID的Service Data
+0x21 128位UUID的Service Data
+0xFF 制造商自定义的数据
+</code></pre><h4 id="Example-of-Peripheral-and-Bluetooth-Central"><a href="#Example-of-Peripheral-and-Bluetooth-Central" class="headerlink" title="Example of Peripheral and Bluetooth Central"></a>Example of Peripheral and Bluetooth Central</h4><p>一台名叫VK的外设,公布了一个Service UUID <code>3344</code>,<code>5566</code>;其中<code>3344</code>的Service Data是”0xAA,0xBB,0xCC”,制造商的自定义数据是”0x12,0x34,0x56,0x78”</p>
+<p>那么他的广播数据是~</p>
+<pre><code>04 08 56 4B 05 02 44 33 66 55 06 16 44 33 cc bb aa 07 FF 00 00 78 56 34 12
+</code></pre><p>拆分数据分析分析</p>
+<pre><code>04 08 56 4B
+长度4 设备完整名称 V K
+
+05 02 44 33 66 55
+长度5 不完整的16位列表 3344 5566
+
+06 16 44 33 cc bb aa
+长度6 16位UUID的ServiceData UUID=3344 数据是 AA BB CC
+
+07 FF 00 00 78 56 34 12
+长度7 厂商自定义数据 厂商ID=0000 厂商自定义数据=12345678
+</code></pre><p><code>如果有错误不要打我…</code></p>
+<p>iOS端解析广播数据</p>
+<pre><code>-(void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary&lt;NSString *,id&gt; *)advertisementData RSSI:(NSNumber *)RSSI
+{
+    // 名字的字符串
+    NSLog(@&quot;Name %@&quot;,advertisementData[CBAdvertisementDataLocalNameKey]);
+    // CBUUID的NSArray
+    NSLog(@&quot;Service UUID %@&quot;,advertisementData[CBAdvertisementDataServiceUUIDsKey]);
+    // Key为CBUUID,Value为NSData的NSDictionary
+    NSLog(@&quot;Service Data %@&quot;,advertisementData[CBAdvertisementDataServiceDataKey]);
+    // 制造商的数据NSData
+    NSLog(@&quot;ManufacturerData %@&quot;,advertisementData[CBAdvertisementDataManufacturerDataKey]);
+}
+</code></pre><p>Android端解析</p>
+<pre><code>@Override
+    public void onLeScan(final BluetoothDevice device, int rssi,
+            byte[] scanRecord) {
+        // scanRecord 就是所有的广播数据呗
+   }
+</code></pre><p>iOS端为了隐私保护,做了各种各样奇怪的限定,所以不像Android那么爽,可以直接把广播帧的字节流都提取出来,所以就只能好好阅读协议,才能让iOS的App获取到想要的数据</p>
+<p>相同的,Android虽然数据很开放,下位机可以不按照BLE协议去设置广播数据,Android App依然可以读得出来数据,但是解析数据就很头疼的样子了.</p>
+<p>嗯,各有各的好处~</p>
+<h4 id="BTW"><a href="#BTW" class="headerlink" title="BTW"></a>BTW</h4><p>其中一个type是</p>
+<pre><code>0x17  Public Target Address
+目标Mac地址
+</code></pre><p>官方定义是</p>
+<p>The Public Target Address data type defines the address of one or more intended recipients of an advertisement when one or more devices were bonded using a public address. This data type is intended to be used to avoid a situation where a bonded device unnecessarily responds to an advertisement intended for another bonded device.</p>
+<h4 id="what-are-you-弄啥嘞…"><a href="#what-are-you-弄啥嘞…" class="headerlink" title="what are you 弄啥嘞…"></a>what are you 弄啥嘞…</h4><p>我YY他的用处就是,这个BLE设备只能被<code>指定Mac地址</code>的主机连接.</p>
+<p>好啦,这次又学到了一点儿蓝牙的知识,写个文章当笔记.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20160904-ble-ad-data.html" data-id="ckl153wap002kzxij2r9dtes9" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/study/20160909-all-mitrix.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          全都是矩阵~
+        
+      </div>
+    </a>
+  
+  
+    <a href="/wtf/20160901-conflicts-and-conflicts.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">纠结的随想</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Android和iOS中的socket超时问题 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Programming is difficult~">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android和iOS中的socket超时问题">
+<meta property="og:url" content="http://vkwk.site/programming/20180123-android-and-ios-socket-timeout.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="Programming is difficult~">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-01-23T00:42:14.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.984Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="怎么算呢">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-android-and-ios-socket-timeout" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20180123-android-and-ios-socket-timeout.html" class="article-date">
+  <time datetime="2018-01-23T00:42:14.000Z" itemprop="datePublished">2018-01-23</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android和iOS中的socket超时问题
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>咱们牛逼的新产品——码表，在数据同步上使用蓝牙和Wi-Fi两种同步方式，其中Wi-Fi同步是让码表和手机处在同一局域网内，然后通过一个协议来传输数据。</p>
+<p>很容易想到Socket。</p>
+<p>Socket，提供了IP层的数据传输业务。让两个节点通信成为了可能。</p>
+<p>Socket有TCP和UDP传输两种方式。据说现在最先进的是TCP，它是对UDP的升级。从技术角度说，UDP是一个过时的技术。那么，它真的没用了吗？</p>
+<p>简单一搜索，发现现在还是有很多业务是使用UDP的，而且用更先进的TCP反而效果不理想。</p>
+<h2 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h2><p>之前水壶架硬件和服务器交互的时候，使用的是TCP来传输。TCP的优点就是，保证数据正确、完整、已送达。它有强大又复杂的重传校验等机制。保证了可靠性。</p>
+<p>而且，由于TCP是一个长链接，所以实时性也非常的好。</p>
+<p>所以我们二话没说，就开始使用TCP传输。</p>
+<h3 id="Android-TCP"><a href="#Android-TCP" class="headerlink" title="Android TCP"></a>Android TCP</h3><p>其实android直接用系统的接口就可以很方便的进行socket操作。</p>
+<p><code>注意，Socket是必须在新线程中操作的</code></p>
+<p>初始化一个socket实例，获取它的input和output的流，对流进行读写，就相当于用socket进行收发了。</p>
+<p>不过这里有一个问题，那就是你很难知道自己是否还连着socket，除非用一个写操作，出现异常。</p>
+<p>因为他的isConnected或者isClosed方法都是获取本地状态的，并不知道远程服务器是否还连接着。</p>
+<p>所以stackoverflow上的解决方法是，发送心跳包…发送一个urgentData来确定服务器是否还可达。</p>
+<p>说实在的，这个解决方法，真的垃圾。</p>
+<h4 id="Timeout"><a href="#Timeout" class="headerlink" title="Timeout"></a>Timeout</h4><p>那么超时呢？</p>
+<p>我觉得完全没法做。读取流的时候，当前线程就完全阻塞了。根本没有机会去检查等待时间，而且完全无法中断读取的操作…………</p>
+<h3 id="iOS-TCP"><a href="#iOS-TCP" class="headerlink" title="iOS TCP"></a>iOS TCP</h3><p>iOS上用<code>CocoaAsyncSocket</code>这个网络库来实现socket通信。实在是方便。</p>
+<p>他的读和写可以增加Tag，方便实用状态基。并且有读取指定长度这种操作，还可以设置超时。</p>
+<p>实在是太方便了，所以我都不想多说了……</p>
+<h2 id="BUT"><a href="#BUT" class="headerlink" title="BUT"></a>BUT</h2><p>写到这里，是比较了Android原生TCP超精简实现和iOS超厉害的框架实现的TCP通信。</p>
+<p>当我根据协议把一切的一切写好了之后，联调时候发现了严重的丢帧问题。</p>
+<p>从TCP的理论来说，丢帧了，应该会自动重传。但是并没有收到新的帧。上下位机都停在了某一个状态。</p>
+<p>经过调试，我们发现问题出在了下位机发送数据和接受数据的地方。下位机发送数据后会收到TCP的响应。而这时候手机也发了协议中的响应数据回来。这就导致了下位机串口收到的数据，出现了粘包情况。导致了状态异常。从上位机的角度来说，自己的发送的<code>响应</code>已经得到了<code>响应</code>，会认为下位机已经收到了<code>响应</code>……</p>
+<p>对，状态乱了，也不同步了。</p>
+<p>所以我们在上位机这里增加了延迟机制，保护下位机脆弱的心灵。但是这并没有从根本上解决这个问题，而且这会大大增加传输需要的时间。(经过测试，发现稳定的用了延迟方法传输一个文件的速率是蓝牙的3倍)</p>
+<h2 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h2><p>这肯定是不能被接受的！</p>
+<p>虽然说Wi-Fi的理论速度是用MB做单位的，但是由于我们硬件的各种限制。这个数字会大大大大的缩小。但是也不至于缩小到3kb左右～</p>
+<p>我们通过进一步调试，发现主要问题还是出现在下位机TCP响应和数据包的粘连情况。所以，为了解决这个棘手的问题，不如直接把这个响应去掉算了！</p>
+<h3 id="Android-UDP"><a href="#Android-UDP" class="headerlink" title="Android UDP"></a>Android UDP</h3><p>UDP在Android中也有很现成的接口。</p>
+<p>使用<code>DatagramSocket</code>类来操作udp。</p>
+<p>udp可以算是数据包了，它是不基于连接的。但是它还是需要端口来通信。所以对于下位机来说，不能直接将数据通过一个连接写入了。得确定目标节点的地址和端口才能将数据返回回去。</p>
+<p>由于之前TCP版本抽象的比较好，所以转换到UDP比较轻松。</p>
+<h4 id="Timeout-1"><a href="#Timeout-1" class="headerlink" title="Timeout"></a>Timeout</h4><p>关键的一点是，android的DatagramSocket类自带了timeout属性！在等待数据进入的时候，可以设置一个timeout。一旦超时，直接抛出异常。之后就可以进入重传流程！</p>
+<h3 id="iOS-UDP"><a href="#iOS-UDP" class="headerlink" title="iOS UDP"></a>iOS UDP</h3><p>CocoaAsyncSocket这个库必然也是提供了UDP操作的，不过可气的是，这次他不提供timeout这个操作了！</p>
+<h4 id="Timeout-2"><a href="#Timeout-2" class="headerlink" title="Timeout"></a>Timeout</h4><p>所以iOS的超时就需要自己写了……</p>
+<p>其实想想还是比较简单的。只要在发送完毕之后启动一个定时器，在x秒后检查是否有数据即可。</p>
+<p>其中的难点大概就是，如何确定是否有数据进入，以及如何确定进入的数据是不是之前开启定时器时候的数据的回复信息……</p>
+<p>所以，特地引入了一个变量</p>
+<pre><code>NSDate *reading_timestamp；
+</code></pre><p>读取数据的时间。</p>
+<p>一个定时检查的方法</p>
+<pre><code>-(void)check_receive:(NSTimeInterval)timestamp｛
+    if (reading_timestamp.timeIntervalSince1970==timestamp) {
+    //timeout!!
+    NSLog(@&quot;timeout !&quot;);
+    }
+//.......
+}
+</code></pre><p>然后在需要回馈的发送中添加了一些赋值操作。</p>
+<pre><code>-(void)udpSocket:(GCDAsyncUdpSocket *)sock didSendDataWithTag:(long)tag{
+    isSending=NO;
+    if(tag&gt;0&amp;&amp;tag&lt;FitFileTransmissionStatusDone){
+        transmissionStatus=(FitFileTransmissionStatus)tag;
+        reading_timestamp=[NSDate date];
+        NSTimeInterval interval=reading_timestamp.timeIntervalSince1970;
+        [sock receiveOnce:nil];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), queue, ^{
+            [self check_receive:interval];
+        });
+    }
+}
+</code></pre><p>这里要注意，interval这个中间变量是一定要写的，不写会死。具体原因，就和block的机制有关了，想通过我的笔记了解的话，可以看看之前的一片关于<code>危险的block</code>的记录。</p>
+<p>在延迟的block中比较全局的开始读取的时间和执行block前的时间局部的时间，来确定全局的读取时间是否有改变。用这个思路成功的解决了这个问题！！</p>
+<h2 id="End"><a href="#End" class="headerlink" title="End"></a>End</h2><p>通过UDP，传输稳得很，而且速度是蓝牙的19倍左右！这才叫爽。</p>
+<p>全文只有iOS的Timeout贴了代码，因为。别的代码实在是太简单了，而且网上一查一大片。只有iOS这一段是我原创的～哈哈</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20180123-android-and-ios-socket-timeout.html" data-id="ckl153waa001lzxijq2pi8oek" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/programming/20180421-android-bluetooth-connection-state.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Android 蓝牙连接状态
+        
+      </div>
+    </a>
+  
+  
+    <a href="/programming/20180116-ios-linearlayout.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">iOS线性布局?</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

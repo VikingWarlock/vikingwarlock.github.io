@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>安卓初体验? | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="I sort of like Android now...">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓初体验?">
+<meta property="og:url" content="http://vkwk.site/programming/20160923-android-first-experience.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="I sort of like Android now...">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-09-23T00:13:41.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.985Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="Android">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-android-first-experience" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20160923-android-first-experience.html" class="article-date">
+  <time datetime="2016-09-23T00:13:41.000Z" itemprop="datePublished">2016-09-23</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      安卓初体验?
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="安卓初体验"><a href="#安卓初体验" class="headerlink" title="安卓初体验~"></a>安卓初体验~</h2><p>其实这并不算是初体验吧,毕竟大三的时候已经玩过android开发了,而且看起来也蛮像回事儿的.</p>
+<p>只不过当时搞了NFC,业务逻辑和网络请求.剩下的最重要的界面和界面跳转,都是在鹅厂的望神帮我写的~</p>
+<h3 id="第一节课其实我没去"><a href="#第一节课其实我没去" class="headerlink" title="第一节课其实我没去"></a>第一节课其实我没去</h3><p>那一节课,据说老师讲了布局文件</p>
+<p>然后好像就布置了一个计算器的作业,然后就没什么了.</p>
+<p>反正,我就在界面编辑器里面拖控件.然后findViewById,之后给他们做了一些逻辑~</p>
+<h3 id="第二节课说是要做SD卡读取图片-并且显示出来"><a href="#第二节课说是要做SD卡读取图片-并且显示出来" class="headerlink" title="第二节课说是要做SD卡读取图片,并且显示出来"></a>第二节课说是要做SD卡读取图片,并且显示出来</h3><p>我一想,觉得有点儿难啊,于是就开始查官方文档去了,</p>
+<p>整理了一下,获取文件夹的路径,文件夹内文件这些好像都不难.</p>
+<p>选择一个内容显示估计也不难,但是如何做一个漂亮的选择页面,可能比较复杂.</p>
+<p>我打算用GridView,做一个和相册一样.</p>
+<h3 id="Let’s-do-this"><a href="#Let’s-do-this" class="headerlink" title="Let’s do this"></a>Let’s do this</h3><p>先搞了一个SDCardHelper的类(写iOS时候留下的习惯,各种Helper)</p>
+<pre><code>//外部储存是否可写
+static public boolean isExternalStorageWritable()
+//外部储存是否可读
+static public boolean isExternalStorageReadable()
+//储存路径
+static public String storagePath()
+//为GridView用的文件列表
+static public List&lt;GridItem&gt; getFileList()
+</code></pre><h4 id="Android的GridView和iOS的UICollectionView好像差不太多"><a href="#Android的GridView和iOS的UICollectionView好像差不太多" class="headerlink" title="Android的GridView和iOS的UICollectionView好像差不太多"></a>Android的GridView和iOS的UICollectionView好像差不太多</h4><p>Android的GridView需要的适配器里面需要重写</p>
+<pre><code>public int getCount();
+public Object getItem(int position);
+public long getItemId(int position);
+public View getView(int position, View convertView, ViewGroup parent);
+</code></pre><p>iOS的UICollectionView需要实现DataSource协议的</p>
+<pre><code>-(NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView;
+-(NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section;
+-(UICollectionViewCell*)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+</code></pre><p>这样就可以正常显示一个GridView(UICollectionView)</p>
+<p>可是,我要自定义控件呀!不然用原始的GridView中每个item的View或者UICollectionView中原始的UICollectionViewCell<br>,那得多难看…</p>
+<p>在iOS中,只要写一个继承于UICollectionViewCell的类,对它进行界面操作,数据操作,并且在Protocol中复用Cell并且返回,就可以完成目的</p>
+<p>在Android中,貌似没有类似UICollectionViewCell的东西.所以得自己重写一个类,用来持有Item的xml布局文件中的各个控件</p>
+<pre><code>import android.widget.ImageView;
+import android.widget.TextView;
+
+/**
+ * Created by vikingwarlock on 16-9-23.
+ * This is the class for view
+ */
+public class GridItemView {
+    public ImageView imageView;
+    public TextView filename;
+}
+</code></pre><p>之前的图片列表,也专门写了一个类,用来存放这个数据</p>
+<pre><code>import java.io.Serializable;
+
+/**
+ * Created by vikingwarlock on 16-9-23.
+ * This is a class that represent a grid item
+ */
+public class GridItem implements Serializable{
+    public String filepath;
+    public String filename;
+}
+</code></pre><p>这里用了一个<code>Serializable</code>,是为了后面Intent传递用的~</p>
+<p>最后在Adapter类里面实现View</p>
+<pre><code>@Override
+public View getView(int position, View convertView, ViewGroup parent) {
+    GridItemView item;
+    GridItem data = gridItemList.get(position);
+    if (convertView == null) {
+        convertView = inflater.inflate(R.layout.gridviewitem, null);
+        item = new GridItemView();
+        item.filename = (TextView) convertView.findViewById(R.id.itemName);
+        item.imageView = (ImageView) convertView.findViewById(R.id.itemImage);
+        convertView.setTag(item);
+    } else {
+        item = (GridItemView) convertView.getTag();
+    }
+    ImageLoader.getInstance().displayImage(&quot;file://&quot;+data.filepath,item.imageView);
+    item.filename.setText(data.filename);
+    return convertView;
+}
+</code></pre><p>界面就差不多搞定了~</p>
+<p>至于点击效果,iOS依然是实现一个Protocol~就可以了</p>
+<pre><code>-(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath;
+</code></pre><p>Android需要手动添加</p>
+<pre><code>GridView gv = (GridView) findViewById(R.id.gridView);
+if (gv != null) {
+    gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        public void onItemClick(AdapterView&lt;?&gt; parent, View v, int position, long id) {
+            GridItem item = datalist.get(position);
+            Intent intent=new Intent();
+            intent.setClass(SDView.this,MainActivity.class);
+            Bundle bundle=new Bundle();
+            bundle.putSerializable(&quot;result&quot;,item);
+            intent.putExtras(bundle);
+            setResult(2,intent);
+            finish();
+        }
+    });
+</code></pre><p>这里的gv是GridView的意思,不要想歪了.</p>
+<p>做了一堆和Bundle有关的事情,主要是为了Intent中可以传递一个对象,而不仅仅是字符串.</p>
+<p>setResult()用来传递一个Intent回上一个需要Result的Activity.</p>
+<p>finish()就是结束当前Activity.</p>
+<p>这个花了我最多时间的东西就这样做完了~</p>
+<p>当然啦,后面还遇到了图片显示的问题.比如卡住啊,比如OOM啊~最后借助了<a href="https://github.com/nostra13/Android-Universal-Image-Loader" target="_blank" rel="noopener">universal-image-loader</a><br>都解决了!!</p>
+<p>最后坐在旁边的同学跟我说,他们的代码,只有几十行.原来老师给的demo中获取图片是这样写的</p>
+<pre><code>@Override
+public void onClick(View v) {
+    Intent intent = new Intent();
+    intent.setType(&quot;image/*&quot;);
+    /* 使用Intent.ACTION_GET_CONTENT这个Action */
+    intent.setAction(Intent.ACTION_GET_CONTENT);
+    /* 取得相片后返回本画面 */
+    startActivityForResult(intent, 1);
+}
+</code></pre><p>我好生气!说好的操作SD卡呢!</p>
+<p>这样的写法,和iOS中的UIImagePickerViewController一样了~</p>
+<p>Anyway,至少我学会了自定义控件的GridView,体验了一把OOM,还学习了SDCard的操作</p>
+<p>还望各位大大指导我!</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20160923-android-first-experience.html" data-id="ckl153waj0024zxijxmiy2ak6" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/android/" rel="tag">Android</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/programming/20160925-wechat-verify.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          微信小网页的安全性
+        
+      </div>
+    </a>
+  
+  
+    <a href="/life/20160920-we-do-what-we-want-to-do.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">We do what we want to do</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

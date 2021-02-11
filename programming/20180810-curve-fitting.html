@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>曲线拟合 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="What the hell">
+<meta property="og:type" content="article">
+<meta property="og:title" content="曲线拟合">
+<meta property="og:url" content="http://vkwk.site/programming/20180810-curve-fitting.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="What the hell">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-08-10T00:08:29.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.988Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="怎么算呢">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-curve-fitting" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20180810-curve-fitting.html" class="article-date">
+  <time datetime="2018-08-10T00:08:29.000Z" itemprop="datePublished">2018-08-10</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      曲线拟合
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>有个叫做应变片的东西，每个应变片的物理特性都不同，所以收到相同的力时，不同的应变片得到的信号可能不太一样。</p>
+<p>所以，每个应变片都需要做一些配置。</p>
+<p>所以，我们需要一个程序来收集数据。</p>
+<p>比如我们用一组标准力来测量信号，就可以获得到一组数据对:(N1,Sig1),(N2,Sig2)…</p>
+<p>已知: 这是N和Sig是线性关系,所以这个要拟合的不是曲线，是条直线～</p>
+<h3 id="Math"><a href="#Math" class="headerlink" title="Math"></a>Math</h3><p>是时候，上主题了。</p>
+<p>凭我模模糊糊的记忆，我感觉好像是，最优化的内容。好像是，牛顿法？</p>
+<p>所以我就去查了牛顿逼近法，查了半个下午，才发现这个是求方程根的～</p>
+<p>后来模模糊糊的想起来，好像是线性规划，只要求Yi和F(Xi)的差的和的最小值，应该就是最接近的解了～</p>
+<p>正在这个时候，我突然查查看Apple有没有做什么牛逼的函数给我～</p>
+<h3 id="Accelerate"><a href="#Accelerate" class="headerlink" title="Accelerate"></a>Accelerate</h3><p>果然Apple是有这么一个库的，叫做<a href="https://developer.apple.com/documentation/accelerate?language=objc" target="_blank" rel="noopener">Accelerate</a>，专门用来算各种各样的高等数学。</p>
+<p>一开始看到了一个<a href="https://developer.apple.com/documentation/accelerate/sparse_solvers?language=objc" target="_blank" rel="noopener">Sparse Solvers</a>是个解方程的东西，于是就列了KX=B的一个矩阵式，使用accelerate提供的解方程函数来计算结果，结果是错的～</p>
+<p>因为，直接解方程如果可以解出来，那不就是一个固定的k和b了嘛？然而我是要估计一个k和b，所以肯定不是直接解方程的。</p>
+<h3 id="Least-squares"><a href="#Least-squares" class="headerlink" title="Least squares"></a>Least squares</h3><p>最小二乘法，终于让我想起来了这个东西，毕竟是大一时候微积分学的，思考太久很正常。</p>
+<p>设Zi=(Yi-F(Xi))^2,将所有的Zi加在一起，这个值如果是最小的，那就意味着估计的曲线和误差是最小的。要使得这个值是最小的，那就可以求所有未知参数的偏导，并使得每个偏导的方程都等于0。</p>
+<p>再经过数学推导得到了y=ax+b通过最小二乘法得到a和b的估计值的表达式。</p>
+<p>由于我懒得用数学公式编辑器，也懒得截图，所以表达式用纯文字表达。</p>
+<pre><code>n:样本个数
+X:Xi的和
+Y:Yi的和
+XX:Xi平方的和
+XY:XiYi的和
+
+a=(n*XY-X*Y)/(n*XX-X*X)
+b=(Y-X*a)/n
+</code></pre><p>这里还是用了accelerate的函数，做了矩阵的乘法来计算XiYi的和</p>
+<pre><code>void vDSP_mmul(const float *__A, vDSP_Stride __IA, const float *__B, vDSP_Stride __IB, float *__C, vDSP_Stride __IC, vDSP_Length __M, vDSP_Length __N, vDSP_Length __P);
+</code></pre><p>虽然这里可以用另一个函数，就是向量的乘法，但是我一开始写的时候，没找到这个函数(文档都是英文的，还是英文版的高数，看着费力啊～)就是下面这个函数:</p>
+<pre><code>void vDSP_vsmul(const float *__A, vDSP_Stride __IA, const float *__B, float *__C, vDSP_Stride __IC, vDSP_Length __N);
+</code></pre><h4 id="Function"><a href="#Function" class="headerlink" title="Function"></a>Function</h4><p>啰嗦了半天贴个代码吧。</p>
+<pre><code>void calculateEquation(double*x,double*y,double* key){
+    double xy[1];
+    double sum_x=0,sum_y=0,sum_xx=0; //这里就对应了上面说的 X,Y,XX,XY
+    int n=7;
+    vDSP_mmulD(x, 1, y, 1, xy, 1, 1, 1, n);
+    for (int i=0; i&lt;n; i++) {
+        sum_x+=x[i];
+        sum_xx+=x[i]*x[i];
+        sum_y+=y[i];
+    }
+    key[0]=(n*xy[0]-sum_x*sum_y)/(n*sum_xx-sum_x*sum_x);  //k
+    key[1]=(sum_y-key[0]*sum_x)/n;  //b
+    NSLog(@&quot;y=%lfx+%lf&quot;,key[0],key[1]);
+}
+</code></pre><p>写的不一定好，但是应该是对的～</p>
+<h4 id="Test"><a href="#Test" class="headerlink" title="Test"></a>Test</h4><p>作为一个严谨的人，我还是要做点测试的。在网上找了两组数据做了单元测试，因为浮点型，所以可能最后几位数字不一样，就会导致单元测试判断错误。所以得，做点儿近似值～</p>
+<pre><code>- (void)testExample {
+    double xS[]={0,1,2,3,4,5,6};
+    double yS[]={1,2,3,4,5,6,7};
+    double k[2];
+    calculateEquation(xS,yS,k);
+    XCTAssertEqual(k[0], 1.0);
+    XCTAssertEqual(k[1], 1.0);
+}
+
+-(void)testExample2{
+    double xS[]={34.1, 34.137, 34.174, 34.211, 34.248, 34.285, 34.322};
+    double yS[]={74.4, 74.40321739130435, 74.4064347826087, 74.40965217391305, 74.41286956521739, 74.41608695652174, 74.41930434782608};
+    double k[2];
+    calculateEquation(xS,yS,k);
+    XCTAssertEqual(round(k[0]*100000), round(0.08695652173913038*100000));
+    XCTAssertEqual(round(k[1]*100000), round(71.43478260869566*100000));
+}
+
+-(void)testExample3{
+    double xS[]={-1.5, -1.38, -1.26, -1.14, -1.02, -0.9, -0.78};
+    double yS[]={57.30000000000001, 57.34640000000001, 57.39280000000001, 57.43920000000001, 57.48560000000001, 57.53200000000001, 57.57840000000001};
+    double k[2];
+    calculateEquation(xS,yS,k);
+    XCTAssertEqual(round(k[0]*100000), round(0.38666666666666627*100000));
+    XCTAssertEqual(round(k[1]*100000), round(57.88000000000001*100000));
+}
+</code></pre><h3 id="End"><a href="#End" class="headerlink" title="End"></a>End</h3><p>数学，还是很有用的！</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20180810-curve-fitting.html" data-id="ckl153waz0035zxijj450euyt" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/programming/20180826-BLEoE-1.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          BLEoE(1)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/programming/20180807-wechat-mini-program-bluetooth-1.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">微信小程序蓝牙坑(1)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

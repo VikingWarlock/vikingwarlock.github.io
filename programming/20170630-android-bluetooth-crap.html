@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Android上见鬼的蓝牙 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="I like Android but not developing for it">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android上见鬼的蓝牙">
+<meta property="og:url" content="http://vkwk.site/programming/20170630-android-bluetooth-crap.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="I like Android but not developing for it">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-06-29T23:06:18.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.984Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="Android">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-android-bluetooth-crap" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20170630-android-bluetooth-crap.html" class="article-date">
+  <time datetime="2017-06-29T23:06:18.000Z" itemprop="datePublished">2017-06-29</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Android上见鬼的蓝牙
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>以前发的各种蓝牙开发的文章中使用的程序,都是在我自己的手机上完美运行过的.</p>
+<p>我信心满满的就把app发布了.</p>
+<p>之后就收到了很多邮件…各种投诉,说蓝牙完全搜索不到啦!蓝牙连不上啦!用不了啦!</p>
+<p>和公司之前所有Android版本的蓝牙功能相比,我做的这个版本在扫描附近蓝牙的时候,可以实时的更新蓝牙信号的强度.<br>完美解决了之前用户拿着app不知道哪一个蓝牙是前轮,哪一个蓝牙是后轮.</p>
+<p>这一套在我自己的手机(Nexus 6P)上完美流畅的运行了,在一些用户的手机上竟然出现了,完全扫描不到蓝牙外设的情况!</p>
+<p>其实在发布之前,我们公司内部所有的android手机都参与了测试,虽然手机不同,性能不同,但是都没有出现完全搜索不到的现象.</p>
+<p>于是我掏出我的坚果手机(不是坚果pro),打开了搜索界面,也出现了搜索的结果,只不过…过了一会儿,它们就消失了!</p>
+<h4 id="Debug"><a href="#Debug" class="headerlink" title="Debug"></a>Debug</h4><p>于是我就接上电脑看看控制台都说了一些什么…</p>
+<p>在搜索到了某一个设备的蓝牙广播之后,系统好像就不想再收这个蓝牙外设的广播信号了!</p>
+<p>我的搜索界面是定时刷新可用的蓝牙外设列表的,在判断某一个蓝牙外设是不是还存在的时候,我用了时间戳.每次底层搜索到蓝牙外设的时候,我会在model层更新这个蓝牙外设的时间戳.每次View层获取最新列表数据的时候,把每个设备的更新时间戳减去当前的时间戳,如果超过一个阈值,说明这个蓝牙外设已经不存在了.</p>
+<pre><code>public class ScanItem {
+
+    private BluetoothDevice device;
+    private int rssi;
+    private int model;
+    private long updateTime;
+    private boolean connecting;
+    private boolean connected;
+
+    /**
+    ...
+    **/
+
+    public boolean isAvailable(){
+        return ((System.currentTimeMillis()-updateTime)&lt;2000);
+    ｝
+｝
+</code></pre><p>在判断这里我的阈值是2秒,看来在某些垃圾手机上面,是不能酱紫的.于是我就改成了20秒.</p>
+<p>运行起来,发现还是不行……</p>
+<p>因为,不管过多少秒,这个垃圾系统都不在把收到的广播信息返回给我了！</p>
+<h4 id="See-see-dalao’s-work"><a href="#See-see-dalao’s-work" class="headerlink" title="See see dalao’s work"></a>See see dalao’s work</h4><p>然后我想到,有那么多做蓝牙的app,我看看它们怎么运行的,怎么实时更新信号强度的.</p>
+<p>我下载了我最喜欢的<a href="https://play.google.com/store/apps/details?id=com.macdom.ble.blescanner" target="_blank" rel="noopener">BLE Scanner</a>,运行了起来,发现很完美啊.</p>
+<p>然后我就在控制台里面看,发现这个app在一个劲的停止搜索,开始搜索,停止搜索,开始搜索……</p>
+<p>或许这是一个好方法！既然这种破系统一次扫描对一个设备只会给一次广播信号,那我只能多次停止扫描开启扫描咯.</p>
+<pre><code>if (VKBluetoothManager.getInstance().isScanning()){
+    VKBluetoothManager.getInstance().stopScan();
+    handler.postDelayed(scanControlRunnable,50);
+}else {
+    VKBluetoothManager.getInstance().scanDevices();
+    handler.postDelayed(scanControlRunnable,950);
+}
+</code></pre><p>心满意足的运行了起来,发现完美,这个破坚果终于达成了实时刷新的效果！</p>
+<p>But……在Nexus 6P上面竟然出现了系统错误</p>
+<pre><code>E/BtGatt.GattService: App &apos;XuanWheel&apos; is scanning too frequently
+</code></pre><p>Are you f**king kidding me?</p>
+<p>这样不行,那样也不行～</p>
+<p>扫描的太频繁,意思应该是刚结束扫描后,再次开始的时间间隔太短了吧.</p>
+<p>于是我就改了两个时间postdelay的延迟时间</p>
+<pre><code>if (VKBluetoothManager.getInstance().isScanning()){
+    VKBluetoothManager.getInstance().stopScan();
+    handler.postDelayed(scanControlRunnable,2000);
+}else {
+    VKBluetoothManager.getInstance().scanDevices();
+    handler.postDelayed(scanControlRunnable,4000);
+}
+</code></pre><p>这样子就可以了！</p>
+<p>嗯,虽然说这样子实现了实时刷新信号强度的功能,但是毕竟刷新率还是很低的……而且本来Nexus 6p可以拥有更高的刷新率,为了兼容这些臭系统,只能一起降低效果了……这么看起来,还是iOS比较好～</p>
+<h4 id="Why"><a href="#Why" class="headerlink" title="Why"></a>Why</h4><p>那么,为啥某些Android系统要这么搞呢！</p>
+<p>我猜,他们为了提高电池寿命,节省CPU资源,让UI更加流畅,所以牺牲了一些使用频率不那么高的外设的性能,于是我们可怜的蓝牙,就这么被阉割了.不过你们在系统里面搞幺蛾子,用户不会说什么,但是用户的手机在使用需要蓝牙的app的时候,这些开发者就很悲催了呀～他们(我们)明明遵守着设计准则,却发现自己的程序跑在了假系统上,还被用户吐槽,被打一星,真是有苦说不清啊…</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20170630-android-bluetooth-crap.html" data-id="ckl153wag001xzxijcqpylvu6" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/android/" rel="tag">Android</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/programming/20170731-linkit-one-irremote.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Linkit One 空调遥控器
+        
+      </div>
+    </a>
+  
+  
+    <a href="/programming/20170501-use-handler-or-thread-to-make-a-timer.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">用handler/thread来做定时器</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>微服务架构练习-1 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Context马上要毕业了，在毕业后不知道还有没有机会做一个自己想做的东西了，所以想把很早之前看的和微服务有关的系统架构实现一遍。为了实现一个这样的系统，需要先设计一个有高性能系统架构需求的系统，不然永远停留在理论阶段，根据实际的情况做，才会讨论出更多的灵感。 先甭管这样一个系统有没有用，先把功能简单说一下。这是一个广告分发系统，用户可以对某一台或多台广告显示装置上显示的内容进行购买和编辑。服务端">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微服务架构练习-1">
+<meta property="og:url" content="http://vkwk.site/programming/20190518-micro-service-practice-1.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="Context马上要毕业了，在毕业后不知道还有没有机会做一个自己想做的东西了，所以想把很早之前看的和微服务有关的系统架构实现一遍。为了实现一个这样的系统，需要先设计一个有高性能系统架构需求的系统，不然永远停留在理论阶段，根据实际的情况做，才会讨论出更多的灵感。 先甭管这样一个系统有没有用，先把功能简单说一下。这是一个广告分发系统，用户可以对某一台或多台广告显示装置上显示的内容进行购买和编辑。服务端">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://grpc.io/img/landing-2.svg">
+<meta property="article:published_time" content="2019-05-17T22:11:04.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.992Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://grpc.io/img/landing-2.svg">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-micro-service-practice-1" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20190518-micro-service-practice-1.html" class="article-date">
+  <time datetime="2019-05-17T22:11:04.000Z" itemprop="datePublished">2019-05-17</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      微服务架构练习-1
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>马上要毕业了，在毕业后不知道还有没有机会做一个自己想做的东西了，所以想把很早之前看的和微服务有关的系统架构实现一遍。为了实现一个这样的系统，需要先设计一个有高性能系统架构需求的系统，不然永远停留在理论阶段，根据实际的情况做，才会讨论出更多的灵感。</p>
+<p>先甭管这样一个系统有没有用，先把功能简单说一下。这是一个广告分发系统，用户可以对某一台或多台广告显示装置上显示的内容进行购买和编辑。服务端接口分为http服务和tcp服务两部分，http服务用来处理用户的请求，tcp服务用来处理嵌入式广告显示装置。<br>这样的设计在之前的防盗定位系统和轨迹追踪系统中都已经实现过，方案是可行的。之前把所有的http功能都做在了一个django服务器中，将tcp的功能用twisted实现，并通过RabbitMQ将django和twisted进行连接。</p>
+<p>这次为了引入微服务架构，那肯定要将各种功能拆分开。比如用户服务，订单服务，商城服务，设备服务和网关服务等。</p>
+<h3 id="Docker"><a href="#Docker" class="headerlink" title="Docker"></a>Docker</h3><p>微服务的一个好处就是，可以轻松的横向扩展，比如用户服务的业务需求量远远大于订单服务的业务需求量，那么可以多增加几台处理用户服务的服务器，分散处理的压力，提高系统中该业务的并发量。</p>
+<p>在使用docker之前，布置一个服务器都是手动ssh登陆，手动安装环境，用git把代码pull上去，然后启动。</p>
+<p>配置环境有的时候还挺复杂，比如安装nginx啊，uwsgi，django，数据库啊.如果在一个系统中需要运行多个服务的时候，需要打开端口，比如uwsgi要开9000，postgres要开5432，rabbitmq要开5672等等。这样会导致服务之间存在不安全性，比如uwsgi服务本不该访问5432端口，但是当系统被攻击时，说不定黑客可以通过一个服务的漏洞访问到其他的服务。</p>
+<p>使用docker可以为每一个服务建立一个容器，容器之间有特定的通信通道比如，nginx容器只能访问python(django+uwsgi)容器的端口，python容器和postgres容器有特定通道，python容器和rabbitmq容器有特定通道。这样postgres容器和rabbitmq容器之间就完全隔离无法通信了，达到了安全隔离的效果。</p>
+<p>使用了docker之后，可以轻松方便的将一个镜像复制很多份。这对于部署一个分布式系统来说真的是轻松了不少，横向扩展一个微服务也就只要使用docker run多个镜像就好了。</p>
+<p>Docker确实够方便了，但是我还嫌麻烦，因为要一台一台一台的输入docker run xxx这样的命令，当有服务要更新了，也需要同样的将对应服务的docker镜像重新更新后再启动。所以就有了docker的三剑客，compose和swarm</p>
+<h4 id="Docker-Compose"><a href="#Docker-Compose" class="headerlink" title="Docker Compose"></a>Docker Compose</h4><p>docker compose是将一系列的docker配置信息写在一个文件里面，运行的时候，可以将全部的服务一次性运行，也可以单独的重启任何一个服务。</p>
+<p>而且使用了networks的alias配置后，容器之间的访问甚至可以用hostname直接访问，都不需要配置ip地址就行了，实在是方便。</p>
+<p>因为我懒得找commit history了，所以就把比较新的一个docker-compose文件贴一下。</p>
+<pre><code>version: &quot;3.7&quot;
+
+services:
+  db:
+    build:
+      context: ./AccountMicroService/
+      dockerfile: Dockerfile-DB
+    container_name: ms_practice_postgres
+    volumes:
+      - type: volume
+        source: database
+        target: /var/lib/postgresql/data
+    networks:
+      inner:
+        aliases:
+          - db
+  account:
+    build:
+      context: ./AccountMicroService/
+      dockerfile: Dockerfile
+    container_name: ms_practice_account_service
+    depends_on:
+      - db
+    ports:
+      - &quot;50051:50051&quot;
+    command:
+      - /bin/sh
+      - -c
+      - |
+          python /code/AccountRPCServer.py
+    volumes:
+      - type: bind
+        source: ./AccountMicroService/
+        target: /code/
+    networks:
+      inner:
+        aliases:
+          - account
+      outter:
+        aliases:
+          - account
+  tester:
+    build:
+      context: ./TestService/AccountTest/
+      dockerfile: Dockerfile
+    container_name: ms_practice_account_tester
+    depends_on:
+      - account
+    volumes:
+      - type: bind
+        source: ./TestService/AccountTest/
+        target: /code/
+    command: python /code/account_rpc_test.py
+    networks:
+      outter:
+        aliases:
+          - tester
+networks:
+  inner:
+  outter:
+volumes:
+  database:
+</code></pre><p>这个compose文件是测account这个服务的。其中有三个服务数据库服务、用户服务、测试服务。定义了两个网络，内网和外网。</p>
+<p>这个服务我使用了gRPC来进行调用，gRPC的相关内容会在后面讲。</p>
+<p>在这里，我公开了account服务的50051端口用于gRPC的调用。在account和db之间建立了私有通道，以便进行数据库的增删改查操作。</p>
+<h4 id="Docker-Swarm"><a href="#Docker-Swarm" class="headerlink" title="Docker Swarm"></a>Docker Swarm</h4><p>Swarm的用处就是帮助部署集群，但是我觉得挺难用的，因为只能使用image部署，不可以通过编译dockerfile来部署，所以对于有文件洁癖的我来说，还是有点儿不爽的，可能以后学了k8s或者其他工具之后，会有更方便的集群部署方式。</p>
+<h3 id="Communication"><a href="#Communication" class="headerlink" title="Communication"></a>Communication</h3><p>根据微服务的基本设计，系统中需要有服务发现和服务注册的功能，微服务之间需要互相通信，这次使用<a href="https://grpc.io" target="_blank" rel="noopener">gRPC</a>来做这样一个通信的工具。因为很方便，只要确定了通信消息，就可以在server和client之间进行通信，比rabbitmq还方便（当然因此他也存在一些劣势）</p>
+<p><img src="https://grpc.io/img/landing-2.svg" alt="grpc工作示意图"></p>
+<p>这里简单设计了一下用户服务的通信原型Service.proto:</p>
+<pre><code>syntax = &quot;proto3&quot;;
+
+option java_multiple_files = true;
+option java_package = &quot;com.ms.account&quot;;
+option java_outer_classname = &quot;AccountProto&quot;;
+option objc_class_prefix = &quot;ACP&quot;;
+
+package accountservice;
+
+service AccountService {
+
+    rpc SignupNewUser (SignupMessage) returns (SignupResponse) {
+    }
+
+    rpc LoginUser (LoginMessage) returns (LoginResponse) {
+    }
+
+}
+
+message LoginMessage {
+
+    string username = 1;
+
+    string password = 2;
+}
+
+message SignupMessage {
+
+    string username = 1;
+
+    string password = 2;
+
+}
+
+message LoginResponse {
+
+    int32 status = 1;
+
+    string message = 2;
+
+    string userid = 3;
+
+}
+
+message SignupResponse {
+
+    int32 status = 1;
+
+    string message = 2;
+
+    string userid = 3;
+}
+</code></pre><p>这里为了测试，只定义了两个服务调用，就是注册和登陆两个服务。</p>
+<p>用python写了gRPC Server：</p>
+<pre><code>import service_pb2
+import service_pb2_grpc
+import AccountDB
+import grpc
+from concurrent import futures
+import time
+
+_ONE_DAY_IN_SECONDS = 60 * 60 * 24
+
+
+class AccountServiceReceiver(service_pb2_grpc.AccountServiceServicer):
+    def SignupNewUser(self, request, context):
+        print(&quot;receive sign up request&quot;)
+        if len(request.password) &lt; 6:
+            msg = &quot;password not strong&quot;
+            return service_pb2.SignupResponse(status=-2, message=msg, userid=&quot;&quot;)
+        else:
+            user = AccountDB.signup_user(request.username, request.password)
+            if user is not None:
+                msg = &quot;succeed&quot;
+                return service_pb2.SignupResponse(status=0, message=msg, userid=str(user.userid))
+            else:
+                msg = &quot;username existed&quot;
+                return service_pb2.SignupResponse(status=-1, message=msg, userid=&quot;&quot;)
+
+    def LoginUser(self, request, context):
+        print(&quot;receive login request&quot;)
+        userid = AccountDB.login_user(request.username, request.password)
+        if userid is not None:
+            msg = &quot;login succeed&quot;
+            return service_pb2.LoginResponse(status=0, message=msg, userid=str(userid))
+        else:
+            msg = &quot;login fail&quot;
+            return service_pb2.LoginResponse(status=-1, message=msg, userid=str(userid))
+
+
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    service_pb2_grpc.add_AccountServiceServicer_to_server(AccountServiceReceiver(), server)
+    server.add_insecure_port(&apos;[::]:50051&apos;)
+    server.start()
+    try:
+        while True:
+            time.sleep(_ONE_DAY_IN_SECONDS)
+    except KeyboardInterrupt:
+        server.stop(0)
+
+
+if __name__ == &apos;__main__&apos;:
+    serve()
+</code></pre><p>gRPC很厉害，他是非阻塞的，所以按照官方的教程来写的话，这个server的代码运行一下就结束了，所以需要增加一个人工阻塞使得代码可以一直运行着。</p>
+<p>就是这样的：</p>
+<pre><code>try:
+    while True:
+        time.sleep(_ONE_DAY_IN_SECONDS)
+except KeyboardInterrupt:
+    server.stop(0)
+</code></pre><p>这里的service_pb2和service_pb2_grpc是gRPC官方提供的工具，他可以根据proto文件生成对应的python文件，以供调用。AccountDB.py是一个数据库操作代码。</p>
+<p>在server完成后，可以设计一个client代码来测试grpc的功能。</p>
+<p>account_rpc_test.py:</p>
+<pre><code>import grpc
+import service_pb2
+import service_pb2_grpc
+import uuid
+
+
+def signup(stub, username, password):
+    signup_message = service_pb2.SignupMessage(username=username, password=password)
+    signup_result = stub.SignupNewUser(signup_message)
+    return signup_result
+
+
+def login(stub, username, password):
+    login_message = service_pb2.LoginMessage(username=username, password=password)
+    login_result = stub.LoginUser(login_message)
+    return login_result
+
+
+def run_test():
+    with grpc.insecure_channel(&apos;account:50051&apos;) as channel:
+        stub = service_pb2_grpc.AccountServiceStub(channel)
+        username = str(uuid.uuid4())
+        password = str(uuid.uuid4())
+        signup_response = signup(stub, username, password)
+        print signup_response.message
+        signup_fail_response = signup(stub, username, str(uuid.uuid4()))
+        print signup_fail_response.message
+        login_response = login(stub, username, password)
+        print login_response.message
+        ogin_fail_response = login(stub, username, str(uuid.uuid4()))
+        print ogin_fail_response.message
+
+
+if __name__ == &apos;__main__&apos;:
+    run_test()
+</code></pre><p>由此便可以测试grpc的功能来</p>
+<h3 id="网关服务"><a href="#网关服务" class="headerlink" title="网关服务"></a>网关服务</h3><p>上面仅仅是完成了微服务和数据库的连接，以及相应的操作。对于http client来说，现在并不能直接调用。为了测试http的并发量，所以得先增加一个http网关。</p>
+<p><a href="http//blog.dedeluoxixi.xyz">dedeluoxixi</a>最近一直在吹爆node.js，所以就由他来做了</p>
+<p>index.js:</p>
+<pre><code>const http=require(&apos;http&apos;);
+const express=require(&apos;express&apos;);
+const logger=require(&apos;morgan&apos;);
+const app=express();
+
+app.use(logger(&apos;dev&apos;));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+
+
+app.use(&apos;/native&apos;,require(&apos;./router/native&apos;));
+app.use(&apos;/grpc&apos;,require(&apos;./router/grpc&apos;));
+app.get(&apos;/test&apos;,(req,res,next)=&gt;{
+    res.json({msg:0})
+});
+
+const server=http.createServer(app);
+server.listen(3000,()=&gt;{
+    console.log(&apos;Nodejs running on port 3000&apos;);
+});
+</code></pre><p>不得不说，用node来做一个简简单单的http server是真的简单啊。</p>
+<p>我们使用了两种方法来做对比：</p>
+<p>1.直接使用node的http server来操控db</p>
+<p>2.使用node的http server的grpc来调用account service再来操控db</p>
+<p>至于结果如何，且听下回分解，哈哈哈</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20190518-micro-service-practice-1.html" data-id="ckl153wbm004lzxijtwpi28mj" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/" rel="tag">Python</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/programming/20190521-micro-service-practice-2.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          微服务架构练习-2
+        
+      </div>
+    </a>
+  
+  
+    <a href="/programming/20190329-audio-data.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">咻咻咻咻</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

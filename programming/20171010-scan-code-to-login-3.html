@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>扫码登录(3) | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Did I login?~ No, but I will tell you when you login!">
+<meta property="og:type" content="article">
+<meta property="og:title" content="扫码登录(3)">
+<meta property="og:url" content="http://vkwk.site/programming/20171010-scan-code-to-login-3.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="Did I login?~ No, but I will tell you when you login!">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-10-09T22:14:10.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.995Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="怎么算呢">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-scan-code-to-login-3" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20171010-scan-code-to-login-3.html" class="article-date">
+  <time datetime="2017-10-09T22:14:10.000Z" itemprop="datePublished">2017-10-09</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      扫码登录(3)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>Http是在tcp的基础上做了高级封装,变成了一个被动的,短链接请求.请求完了就把连接断开了,下一次要请求,就需要再一次进行tcp握手,然后通信……在前面第一篇中,我用了定时轮训的方式问服务器,当前这个二维码是否登录,从功能的角度来说,应该是没有问题的,而且写起来也是特别的方便.</p>
+<p>不过仔细的想一想,其实还是比较浪费资源的.从信息论的角度来说,中间的N次质询,相当于没有任何的信息量(请不要深究这一句),所以,我们不用http来更新扫码状态！</p>
+<p>我们用</p>
+<p><code>Web Socket</code>!</p>
+<h3 id="Web-Socket"><a href="#Web-Socket" class="headerlink" title="Web Socket"></a>Web Socket</h3><p>关于websocket的定义,解释什么的,百度一下,你全都知道了,所以我就不在这个地方多说.</p>
+<p>只说明一点,websocket屌的飞起,和socket的操作一毛一样,关键是服务器终于可以主动的发消息给客户端啦！</p>
+<p>他算是一个长连接,握手之后,就开始了肮脏的通信,通信完了,一方可以发起关闭操作,然后……,最后连接就拆掉了.</p>
+<h3 id="Django"><a href="#Django" class="headerlink" title="Django"></a>Django</h3><p>websocket怎么说也就只能算是对web服务器的一个扩充,如何在已有的web服务器上快速集成一个websocket的服务,才是比较重要的～</p>
+<p>由于之前用的是django做服务器,所以我们就找找给django加上websocket的方法～</p>
+<p>在他的官方文档中提到了很多可用的开源app,其中有一个叫做channels的库,他用了asgi,直接可以快速集成在django中,牛的一批.</p>
+<h3 id="Channels"><a href="#Channels" class="headerlink" title="Channels"></a>Channels</h3><p>这个库的文档,真的是无力吐槽,我真是集成的很辛苦</p>
+<p>我们来简化一下他的文档吧！</p>
+<h4 id="Router"><a href="#Router" class="headerlink" title="Router"></a>Router</h4><p>和django一样,websocket的连接也要有个路由的,我们先建立一个py文件</p>
+<pre><code>from channels.routing import route
+# 这个文件等会儿解释
+from users.webClient import connection_handler, disconnection_handler,subscribe_token
+
+channel_routing = [
+    route(&quot;websocket.connect&quot;, connection_handler, path=r&quot;/ws/$&quot;),
+    route(&quot;websocket.disconnect&quot;, disconnection_handler, path=r&quot;/ws/$&quot;),
+    route(&quot;websocket.receive&quot;, subscribe_token, path=r&quot;/ws/$&quot;),
+]
+</code></pre><p>这里的<code>websocket.connect</code>,<code>websocket.disconnect</code>,<code>websocket.receive</code>相当于是websocket的三种事件,已连接、已断开、收到消息</p>
+<p>中间那个参数和django里面的那个描述一样,就是该路由对应的处理方法.</p>
+<h4 id="Handler"><a href="#Handler" class="headerlink" title="Handler"></a>Handler</h4><p>现在来解释一下上一节说的 users.webClient这个文件</p>
+<pre><code># -*- coding: utf-8 -*-
+
+import json
+from channels.sessions import channel_session
+from users.qrcode_helper import *
+
+
+@channel_session
+def connection_handler(message):
+    message.reply_channel.send({&quot;text&quot;: json.dumps({&quot;status&quot;:False,&quot;msg&quot;:&quot;connected&quot;})})
+
+
+@channel_session
+def subscribe_token(message):
+    try:
+        obj = json.loads(message.content[&quot;text&quot;])
+        tokens = obj[&quot;token&quot;]
+        qrcode_record = fetch_qrcode_record_with_token(token=tokens)
+        if qrcode_record is not None:
+            if is_token_pass_the_authentic(tokens):
+                message.reply_channel.send(
+                    {&quot;text&quot;: json.dumps({&quot;status&quot;: True, &quot;msg&quot;: &quot;succeed&quot;})})
+            else:
+                message.reply_channel.send(
+                    {&quot;text&quot;: json.dumps({&quot;status&quot;: False, &quot;msg&quot;: &quot;succeed&quot;})})
+                qrcode_record.webSocket_session = str(message.content[&quot;reply_channel&quot;])
+                qrcode_record.save()
+                # link token to this channel
+        else:
+            message.reply_channel.send({&quot;text&quot;: json.dumps({&quot;status&quot;: &quot;-1&quot;, &quot;msg&quot;: &quot;token invalid&quot;})})
+            message.reply_channel.send({&quot;close&quot;: True})
+    except Exception as e:
+        message.reply_channel.send({&quot;text&quot;: e.message})
+        message.reply_channel.send({&quot;close&quot;: True})
+
+
+@channel_session
+def disconnection_handler(message):
+    channel = str(message.content[&quot;reply_channel&quot;])
+    qrcode_records = fetch_qrcode_record_with_web_socket_channel(channel)
+    if qrcode_records is not None:
+        for qrcode_record in qrcode_records:
+            qrcode_record.webSocket_session = &quot;&quot;
+            qrcode_record.save()
+</code></pre><p>很长,也不用仔细看,因为里面主要做了扫码登录里面的事情,如果只是要集成一下websocket的话,不用关心这些方法里面的操作,只要注意这里每个方法的传入参数 <code>message</code></p>
+<p>Message有那些用处呢？</p>
+<p>1.通过message.channel或者message.reply_channel可以获取到连接的通道(请暂时不要使用高级操作)<br>2.message.content其实是一个字典,这个字典遵循了ASGI的消息模型,里面有<code>text</code>,<code>reply_channel</code>等等字段</p>
+<p>在我的处理代码里面,我从message.content里面取出了<code>reply_channel</code>,他的value是一个长得很奇怪的字符串(我把它类比成文件描述符把),毕竟要有很多很多很多连接的话,它们的文件描述符不能重复对吧,所以就又长又难看,比如像<code>daphne.response.FSITXWDDzG!IOtDNILqzh</code></p>
+<p>有了这个reply_channel,在后面主动发送消息下去的时候,就可以指定连接发送了～</p>
+<h5 id="Attention"><a href="#Attention" class="headerlink" title="Attention"></a>Attention</h5><p>注意,这里的websocket.connect的handler里面一定一定,千万千万要给反馈消息回去,不然浏览器(只测试了Chrome的)会以为连接超时的！然后给你一个503 bad gateway,之后就主动断开连接了,留你一脸蒙逼的在那儿傻看着.</p>
+<h4 id="Send"><a href="#Send" class="headerlink" title="Send"></a>Send</h4><p>现在我们可以看看之前第一章中的app调用的扫码接口了</p>
+<pre><code>@csrf_exempt
+@require_POST
+@pass_auth
+@require_parameter([&quot;code&quot;])
+def allow_the_qrcode_login(request):
+    code = request.POST[&quot;code&quot;]
+    user = get_user_from_response_session(request)
+    qr_record = fetch_qrcode_record_with_code(code)
+    if user is not None and qr_record is not None:
+        if qr_record.user_id is not None:
+            return JsonResponse({&quot;msg&quot;: &quot;expired&quot;, &quot;status&quot;: -1}, status=400)
+        qr_record.user_id = user.user_uuid
+        qr_record.status = True
+        qr_record.save()
+        if qr_record.webSocket_session is not None:
+            # send new status to the web socket
+            channel = Channel(name=qr_record.webSocket_session)
+            content = {&quot;text&quot;: json.dumps({&quot;status&quot;: True, &quot;msg&quot;: &quot;succeed&quot;})}
+            channel.send(content)
+            pass
+        return JsonResponse({&quot;msg&quot;: &quot;succeed&quot;, &quot;status&quot;: 0}, status=200)
+    return JsonResponse({&quot;msg&quot;: &quot;code not existed&quot;, &quot;status&quot;: -400}, status=400)
+</code></pre><p>这里加了一些些小的改动,我再把他取出来</p>
+<pre><code>if qr_record.webSocket_session is not None:
+    channel = Channel(name=qr_record.webSocket_session)
+    content = {&quot;text&quot;: json.dumps({&quot;status&quot;: True, &quot;msg&quot;: &quot;succeed&quot;})}
+    channel.send(content)
+</code></pre><p>websocket.receive的时候,我把websocket的文件描述符记录在了qrcode的记录中,这样扫描某一个qrcode的时候,就可以知道这个二维码是否有websocket正在订阅他,有订阅的话,就可以拿来对指定的通道进行发送了</p>
+<h3 id="End"><a href="#End" class="headerlink" title="End"></a>End</h3><p>网页端真的没什么好说的,直接贴(里面没有很严密的控制权限,稍微改一改就行,但是我懒)</p>
+<pre><code>function listen_for_status() {
+    socket = new WebSocket(&quot;ws://&quot; + window.location.host + &apos;/ws/&apos;);
+    socket.onmessage = function (e) {
+        var obj = JSON.parse(e.data);
+        if (obj.status == true) {
+            socket.close();
+            window.location=&quot;dashboard.html&quot;;
+        }
+    };
+    socket.onopen = function () {
+        var obj = {};
+        obj.token = token;
+        socket.send(JSON.stringify(obj));
+    };
+}
+</code></pre><p>还有不要忘记更新nginx的配置</p>
+<p>扫码登录的这个小玩意儿,虽然看起来很是简单,但是也耗了我很多的时间,这个过程中,也是学到了很多新的东西呢！</p>
+<p>这次也是达成了一个新的成就：WebSocket(Server&amp;Client)</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20171010-scan-code-to-login-3.html" data-id="ckl153wc5005qzxijz2eao6pa" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/life/20171026-dairy-2017-10-25.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          东西多啊
+        
+      </div>
+    </a>
+  
+  
+    <a href="/programming/20171006-scan-code-to-login-2.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">扫码登录(2)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>

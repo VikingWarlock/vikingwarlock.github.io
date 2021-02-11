@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>iOS图片取色 | VikingWarlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="ARGB,RGBA,BGRA,ABGR...">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS图片取色">
+<meta property="og:url" content="http://vkwk.site/programming/20170818-ios-image-get-color.html">
+<meta property="og:site_name" content="VikingWarlock">
+<meta property="og:description" content="ARGB,RGBA,BGRA,ABGR...">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://vvk.ixuanlun.com/android_xw_gif_right.png">
+<meta property="og:image" content="http://vvk.ixuanlun.com/ios_xw_gif_error.png">
+<meta property="og:image" content="http://vvk.ixuanlun.com/ios_xw_gif_right.png">
+<meta property="article:published_time" content="2017-08-17T20:17:20.000Z">
+<meta property="article:modified_time" content="2021-02-11T07:36:52.991Z">
+<meta property="article:author" content="Viking Warlock">
+<meta property="article:tag" content="iOS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://vvk.ixuanlun.com/android_xw_gif_right.png">
+  
+    <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/avatar.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">VikingWarlock</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://vkwk.site"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-ios-image-get-color" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20170818-ios-image-get-color.html" class="article-date">
+  <time datetime="2017-08-17T20:17:20.000Z" itemprop="datePublished">2017-08-17</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      iOS图片取色
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>上周兴冲冲的在炫轮的iOS版中加了梦寐以求的GIF制作功能,这个功能两年前我就像加,只是当时胆子不够大,觉得iOS不能从相册读取GIF,所以这个功能就一直处于被砍掉的状态.</p>
+<h3 id="Not-Important"><a href="#Not-Important" class="headerlink" title="Not Important"></a>Not Important</h3><p>用UIImagePickerViewController从图库中选择一个图片,这个百度一下,教程是有很多的,就不在这个本来就不重要的地方说了.</p>
+<h5 id="关键就在于如何处理选择的图片"><a href="#关键就在于如何处理选择的图片" class="headerlink" title="关键就在于如何处理选择的图片"></a>关键就在于如何处理选择的图片</h5><p>在UIImagePickerViewController的delegate的回调方法中,有个info</p>
+<pre><code>- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary&lt;NSString *, id&gt; *)info
+</code></pre><p>这个info可厉害了,里面有很多很多的东西</p>
+<pre><code>UIKIT_EXTERN NSString *const UIImagePickerControllerMediaType
+UIKIT_EXTERN NSString *const UIImagePickerControllerOriginalImage //原图 UIImage,不过GIF只有第一帧
+UIKIT_EXTERN NSString *const UIImagePickerControllerEditedImage
+UIKIT_EXTERN NSString *const UIImagePickerControllerCropRect
+UIKIT_EXTERN NSString *const UIImagePickerControllerMediaURL     UIKIT_EXTERN NSString *const UIImagePickerControllerReferenceURL //原图的文件地址
+UIKIT_EXTERN NSString *const UIImagePickerControllerMediaMetadata
+UIKIT_EXTERN NSString *const UIImagePickerControllerLivePhoto
+</code></pre><p>直接使用<code>UIImagePickerControllerOriginalImage</code>获取UIImage肯定是不行的,这就是一个静图,所以我们使用<code>UIImagePickerControllerReferenceURL</code>获取到这个图片的位置,然后再获取到数据,然后再解析成GIF～完美</p>
+<p>于是我就用NSData获取了这个url,然后发现,这个操作得到的NSData是nil！</p>
+<p>我仔细一看这个url,是<code>AssetLibrary</code>的链接,不是一个绝对路径！</p>
+<p>看来需要操作AssetLibrary了……</p>
+<h3 id="AssetLibrary-amp-amp-Photos"><a href="#AssetLibrary-amp-amp-Photos" class="headerlink" title="AssetLibrary &amp;&amp; Photos"></a>AssetLibrary &amp;&amp; Photos</h3><p>于是我就去Apple Developer官网找AssetLibrary的资料,吃鲸的发现,AssetLibrary已经灭绝(废弃)了！</p>
+<p>这是天大的好消息啊,因为查看了其他的资料,据说AssetLibrary是非ARC的,还有一堆同步异步等乱七八糟的东西,总之就是坑很多.现在用Photos来代替,我紧张的去查询Photos,担心他要求的系统SDK比我当前部署的SDK高.</p>
+<p><code>iOS 8 !</code></p>
+<p>哈哈哈哈,和我当前的部署版本是一样的,这就意味着,这个版本的炫轮app的GIF功能是可以对所有用户开放的！</p>
+<p>Photos依然有很多异步操作(毕竟有的图片可能是在iCloud上面的),所以我就干脆定义了一个block来</p>
+<pre><code>typedef void(^LoadingAssetBlock)(NSArray * images);
+</code></pre><p>我是为了获取GIF的,那么这个返回的参数给个数组,就刚刚好了～</p>
+<p>下面我们来根据url获取GIF吧！</p>
+<pre><code>- (void)imagesForURL:(NSURL *)url andBlock:(LoadingAssetBlock)block {
+    PHFetchResult *assets= [PHAsset fetchAssetsWithALAssetURLs:@[url] options:nil]; // 1
+    PHAsset *asset=[assets objectAtIndex:0]; // 2
+    [[PHImageManager defaultManager] requestImageDataForAsset:asset options:nil resultHandler:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) { //3
+        NSData *data=imageData;
+        NSString *type=[NSData sd_contentTypeForImageData:data];  //这是SDWebImage的大佬们写的
+        if ([type isEqualToString:@&quot;image/gif&quot;]) {
+            UIImage *img = [UIImage sd_animatedGIFWithData:data];  这也是SDWebImage的大佬们写的
+            NSMutableArray *renderedImage=[NSMutableArray array];
+            for (UIImage *item in img.images) {
+                VKMutableImage *mutable=[VKMutableImage imageWithImage:item];
+                /**
+                *这里真的不重要
+                */
+                [renderedImage addObject:mutable];
+            }
+            block([NSArray arrayWithArray:renderedImage]);
+        } else{
+            UIImage *image=[UIImage imageWithData:imageData];
+            VKMutableImage *mutable=[VKMutableImage imageWithImage:image];
+                /**
+                *这里真的不重要
+                */
+            block(@[mutable]);
+        }
+    }];
+}
+</code></pre><p>其实只要看注释 1,2,3就够了……</p>
+<h3 id="They-are-not-important"><a href="#They-are-not-important" class="headerlink" title="They are not important!"></a>They are not important!</h3><p>我发现我好像跑题了,这一片的主要内容是,获取UIImage上的各个点的颜色的,然后我们使用RGB数组制作一个UIImage</p>
+<p>再再介绍一下背景吧～</p>
+<p>按理说上面说的这个图片操作的功能,早在炫轮刚面世的时候就存在的,为啥现在才来说这个东西呢？</p>
+<p><code>因为从一开始就写错了！直到现在才发现</code></p>
+<p>就当我上周兴冲冲的写完iOS的GIF制作功能之后,我就开始写android版的GIF制作功能,花了3天才终于把功能做完了！</p>
+<p>正当我准备发一波朋友圈得瑟得瑟的时候,我发现了一个很严重的问题…</p>
+<p><img src="http://vvk.ixuanlun.com/android_xw_gif_right.png" alt="Android GIF ScreenShot"><br><img src="http://vvk.ixuanlun.com/ios_xw_gif_error.png" alt="iOS GIF ScreenShot"></p>
+<p>使用了一样的调色,为什么结果<code>不一样</code>！按照以前的习惯,我一定是会怀疑Android版本出现了问题的,可是根据原图,我总觉得,Android上面的结果好像是正确的！</p>
+<p>那就意味着,发布了快<code>3</code>年的炫轮<code>iOS版App</code>存在一个致命的图像处理的问题！</p>
+<h3 id="Here-we-go"><a href="#Here-we-go" class="headerlink" title="Here we go"></a>Here we go</h3><p>正片开始了～</p>
+<p>经过一连串debug手法,我找到了出问题的代码位置：<code>以下是有问题的代码</code></p>
+<pre><code>CGImageRef imageRef=originImage.CGImage;
+CGContextRef context = newBitmapRGBA8ContextFromImage(imageRef);
+size_t width = CGImageGetWidth(imageRef);
+size_t height = CGImageGetHeight(imageRef);
+CGRect rect = CGRectMake(0, 0, width, height);
+CGContextDrawImage(context, rect, imageRef);
+unsigned char *bitmapData = (unsigned char *)CGBitmapContextGetData(context);
+size_t bytesPerRow = CGBitmapContextGetBytesPerRow(context);
+size_t bufferLength = bytesPerRow * height;
+unsigned char *newBitmap = NULL;
+if(bitmapData) {
+    newBitmap = (unsigned char *)malloc(sizeof(unsigned char) * bytesPerRow * height);
+    if(newBitmap) {
+        for(int i = 0; i +3 &lt; bufferLength;i=i+3) {
+            int R=bitmapData[i];
+            int G=bitmapData[i+1];
+            int B=bitmapData[i+2];
+            /**
+            * 这里一点儿也不重要
+            */
+            newBitmap[i] = R;
+            newBitmap[i+1]=G;
+            newBitmap[i+2]=B;
+            newBitmap[i+3]=255;
+        }
+    }
+    free(bitmapData);
+} else {
+    NSLog(@&quot;Error getting bitmap pixel data\n&quot;);
+}    
+CGContextRelease(context);
+tempImage=[PublicHelper convertBitmapRGBA8ToUIImage:newBitmap withWidth:(int)width withHeight:(int)height];
+free(newBitmap);
+return tempImage;
+</code></pre><p>newBitmap就是经过处理的图片的RGBA数组</p>
+<p>关键错误应该是在这里：</p>
+<pre><code>int R=bitmapData[i];
+int G=bitmapData[i+1];
+int B=bitmapData[i+2];
+</code></pre><p>虽然说我们知道图片是由一堆RGBA构成的,但是我们并不知道RGBA的顺序呀～这并不像Android里面那么爽,Color是一个32bit(4字节)的数字(int),每个字节分别代表着ARGB</p>
+<p>那么iOS呢?</p>
+<p>查了很多的资料,看到各位大佬都说iOS上面是RGBA,那么我原来的写法,好像很RGBA啊,好像没什么问题啊～</p>
+<h3 id="little-endian-big-endian"><a href="#little-endian-big-endian" class="headerlink" title="little-endian,big-endian"></a>little-endian,big-endian</h3><p>难道说,和大小端有关？？</p>
+<p>虽然说是<code>RGBA</code>,但是存在数组里面的是<code>ABGR</code>?</p>
+<p>抱着试一试和重构的态度,借鉴了各种大佬的代码,之后改成了这样</p>
+<pre><code>const int imageWidth = originImage.size.width;
+const int imageHeight = originImage.size.height;
+size_t bytesPerRow = imageWidth * 4;
+uint32_t* rgbImageBuf = (uint32_t*)malloc(bytesPerRow * imageHeight);    
+CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+CGContextRef context = CGBitmapContextCreate(rgbImageBuf, imageWidth, imageHeight, 8, bytesPerRow, colorSpace,kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipLast);
+CGContextDrawImage(context, CGRectMake(0, 0, imageWidth, imageHeight), originImage.CGImage);
+int pixelNum = imageWidth * imageHeight;
+uint32_t* pCurPtr = rgbImageBuf;
+for (int i = 0; i &lt; pixelNum; i++, pCurPtr++)
+{
+    uint8_t *ptr = (uint8_t*)pCurPtr;
+    ptr[0] // Alpha
+    ptr[1] // Blue
+    ptr[2] // Greem
+    ptr[3] // Red
+    /**
+     * 这里一点儿也不重要
+     */
+}
+CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, rgbImageBuf, bytesPerRow * imageHeight,ProviderReleaseData);
+CGImageRef imageRef = CGImageCreate(imageWidth, imageHeight, 8, 32, bytesPerRow, colorSpace,kCGImageAlphaLast | kCGBitmapByteOrder32Little, dataProvider,NULL, true, kCGRenderingIntentDefault);    
+CGDataProviderRelease(dataProvider);
+tempImage = [UIImage imageWithCGImage:imageRef];
+CGImageRelease(imageRef);
+CGContextRelease(context);
+CGColorSpaceRelease(colorSpace);
+return tempImage;
+
+void ProviderReleaseData (void *info, const void *data, size_t size)
+{
+    free((void*)data);
+}
+</code></pre><p>现在用uint32_t来类比android中的Color</p>
+<p>还用了DataProvider来把字节流转换成UIImage～这样修改后的代码,变得更加简洁了！</p>
+<p>关键是,现在工作的正常了！</p>
+<p><img src="http://vvk.ixuanlun.com/ios_xw_gif_right.png" alt="iOS GIF Right"></p>
+<h3 id="End"><a href="#End" class="headerlink" title="End"></a>End</h3><p>不打不相识,Android和iOS不一起开发互相比较的话,就不能互相进步～</p>
+<p>好了,这次不仅添加了GIF制作这个功能,还把以前的图片改色功能给修好了～真是一举两得啊！</p>
+<h4 id="演示视频"><a href="#演示视频" class="headerlink" title="演示视频"></a>演示视频</h4><p><a href="https://www.bilibili.com/video/av13266294/" target="_blank" rel="noopener">iOS</a>&lt;=====&gt;<a href="https://www.bilibili.com/video/av13481745/" target="_blank" rel="noopener">Android</a></p>
+<p>iOS这个视频里面的颜色修改,还没有改～.～</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20170818-ios-image-get-color.html" data-id="ckl153wbg0046zxijompv9xaq" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/programming/20170822-app-code-sign.html" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          突变的SHA1
+        
+      </div>
+    </a>
+  
+  
+    <a href="/programming/20170731-linkit-one-irremote.html" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Linkit One 空调遥控器</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/book/">书记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/wtf/">什么鬼</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/study/">学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/life/">日记</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/programming/">编程</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/hack/">黑科技</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/android/" rel="tag">Android</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/arduino/" rel="tag">Arduino</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ide/" rel="tag">IDE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mini/" rel="tag">Mini</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">Python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web/" rel="tag">Web</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/working/" rel="tag">Working</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ios/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/diary/" rel="tag">日记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/soup/" rel="tag">汤</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/play/" rel="tag">玩玩的</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/note/" rel="tag">笔记</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ble/" rel="tag">蓝牙</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hack/" rel="tag">黑</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/android/" style="font-size: 15.71px;">Android</a> <a href="/tags/arduino/" style="font-size: 10px;">Arduino</a> <a href="/tags/ide/" style="font-size: 10px;">IDE</a> <a href="/tags/mini/" style="font-size: 10px;">Mini</a> <a href="/tags/python/" style="font-size: 15.71px;">Python</a> <a href="/tags/web/" style="font-size: 10px;">Web</a> <a href="/tags/working/" style="font-size: 17.14px;">Working</a> <a href="/tags/ios/" style="font-size: 17.14px;">iOS</a> <a href="/tags/yearly/" style="font-size: 18.57px;">年记</a> <a href="/tags/unknow/" style="font-size: 14.29px;">怎么算呢</a> <a href="/tags/diary/" style="font-size: 20px;">日记</a> <a href="/tags/soup/" style="font-size: 10px;">汤</a> <a href="/tags/play/" style="font-size: 11.43px;">玩玩的</a> <a href="/tags/note/" style="font-size: 12.86px;">笔记</a> <a href="/tags/ble/" style="font-size: 14.29px;">蓝牙</a> <a href="/tags/Hack/" style="font-size: 11.43px;">黑</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+          </li>
+        
+          <li>
+            <a href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+          </li>
+        
+          <li>
+            <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
+          </li>
+        
+          <li>
+            <a href="/study/20191004-ansible.html">ansible</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 Viking Warlock<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+  </div>
+</body>
+</html>
