@@ -66,6 +66,385 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-socket-server-and-client" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/programming/20170928-socket-server-and-client.html" class="article-date">
+  <time datetime="2017-09-27T21:46:22.000Z" itemprop="datePublished">2017-09-27</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/programming/">编程</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/programming/20170928-socket-server-and-client.html">Socket</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>这个故事从三年前开始说起.</p>
+<p>那时老师让我搞Android的一个防伪项目(精益防伪),就是那个用Android的NFC功能来鉴别一个酒是否是假冒伪劣的,也是那个项目让我认识了卢师兄(在华为可厉害了呢).</p>
+<p>那时的我只用过http来进行网络请求,没有用过socket来进行数据交互.</p>
+<p>由于项目需要,那时候就临时在Android上搞了一波socket通信.</p>
+<p>第一次做Android就要碰Socket还是蛮困难的(虽然我已经搞了两年iOS,但是iOS和Android毕竟还是不一样的,而且我还是个孩子),因为界面没做过,java也不是很熟悉,甚至连Android的手机都没有用过. 由于时间比较紧张,所以界面就请望神帮我画了,我去写了数据处理和Socket通信. 那也是第一次我知道了Android上面有很严格的线程限制. 在iOS上的主线程中调用网络,会堵塞,卡在那儿,等到请求完了,就会恢复;不过在android上面,主线程碰一下网络竟然就异常了～(真凶)</p>
+<h3 id="Socket"><a href="#Socket" class="headerlink" title="Socket"></a>Socket</h3><p>Socket其实不应该和http分开说,因为http只是socket的一种扩展罢了,要进行网络通信,总是离不开Socket的.http只不过是在socket上面进行了很多复杂的封装罢了(很复杂).</p>
+<p>socket,翻译过来就是,插座.打个比方就是,我要和你收发数据,就把数据线插到你的插孔里面,然后我们就在这根线里面交流.一个网络节点可以有很多的插座孔,所以也就可以同时和很多很多人一起交流信息.而http是插上了插座,发一句话,收一句话,然后就把插头拔掉了(连接结束了)好处就是服务器和客户端不用一直维护一个连接,缺点嘛,这是一个短连接,下一次想要进行网络请求还需要把TCP的握手流程走一遍,而且是单向操作(只能客户端找服务器麻烦,服务器永远无法主动找客户端麻烦)</p>
+<h3 id="Now"><a href="#Now" class="headerlink" title="Now"></a>Now</h3><p>三年前的旧事讲完了,该说说这次的故事了</p>
+<p>这次我们的产品中会涉及用到socket传输文件,这比三年前那个要求更高了一些,因为文件还是蛮大的,之前每次的数据也就十几个字节(128位)(NFC标签儿本来也存不了多少内容)</p>
+<h4 id="Server"><a href="#Server" class="headerlink" title="Server"></a>Server</h4><p>先从服务器开始说起吧！由于这个socket传输只会一对一的传输,所以这个服务器根根本本不用考虑并发和异步什么的东西,所以</p>
+<p><code>就用Python做个简单的socket服务器吧！</code></p>
+<h5 id="code"><a href="#code" class="headerlink" title="code"></a>code</h5><pre><code>import threading
+import SocketServer
+import datetime
+import time
+
+BUFFER_SIZE = 4096
+
+
+class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
+    t = None
+    wantDisconnect = False
+
+    def handle(self):
+        if self.t is None:
+            self.t = datetime.datetime.now()
+            time_interval = 0
+        else:
+            time_interval = (datetime.datetime.now() - self.t).seconds
+        while time_interval &lt; 60 and not self.wantDisconnect:
+            data = self.request.recv(BUFFER_SIZE)
+            if data:
+                self.t = datetime.datetime.now()
+                print &quot;prepare to send file&quot;
+                f = open(str(data), &apos;rb&apos;)
+                l = f.read(BUFFER_SIZE)
+                while l:
+                    self.request.send(l)
+                    print(&quot;sending (%x)&quot;, l)
+                    l = f.read(BUFFER_SIZE)
+                    time.sleep(1/20)
+                time.sleep(1)
+                self.request.sendall(&quot;\nsending ok&quot;)
+                f.close()
+            else:
+                print threading.currentThread().name, &quot; no data&quot;
+                break
+
+    def setup(self):
+        print threading.currentThread(), &quot; start&quot;
+        self.t = datetime.datetime.now()
+
+    def finish(self):
+        self.wantDisconnect = True
+        print threading.currentThread(), &quot; end&quot;
+
+
+class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+    pass
+
+
+HOST, PORT = &quot;0.0.0.0&quot;, 55555
+
+server = ThreadedTCPServer((HOST, PORT), ThreadedTCPRequestHandler)
+server.serve_forever()
+</code></pre><p>我直接在服务器的文件目录下放了几个图片文件用来做测试的～</p>
+<p>这差不多基本上是直接从Python的SocketServer<a href="https://docs.python.org/2/library/socketserver.html#" target="_blank" rel="noopener">文档</a>中抄来的</p>
+<p>一个多线程的socket服务器就是这么方便</p>
+<p>其中<code>setup()</code>和<code>finish()</code>没什么太大的意思,反正就是又一个socket连接进来了和对方主动断开后会做的事情</p>
+<p>关键的操作都在handle中！</p>
+<p>先贴一下官方的解释：</p>
+<pre><code>handle()
+
+    This function must do all the work required to service a request. The default implementation does nothing. Several instance attributes are available to it; the request is available as self.request; the client address as self.client_address; and the server instance as self.server, in case it needs access to per-server information.
+
+    The type of self.request is different for datagram or stream services. For stream services, self.request is a socket object; for datagram services, self.request is a pair of string and socket.
+</code></pre><p>就是说有请求进来了,就会在这里<code>中断</code> ,aka “回调”(但我觉得用中断好像更加形象生动)</p>
+<p>self.request将获取到socket实例,有了这个socket实例我们就可以读读写写了</p>
+<p>这里的代码是传入的数据代表的是文件,服务器根据文件名,把数据回传回去,就是这么简单,看看效果图</p>
+<p><img src="http://vvk.ixuanlun.com/socket_server_running.png" alt="效果图"></p>
+<p>密集恐惧症了吧？哈哈哈～在服务器把发送的数据打印出来,可以方便调试,(肉眼)检查数据有没有收完收对……</p>
+<p>等下,<code>time.sleep(1/20)</code>这个东西有啥子用处？</p>
+<p>我担心发送的太快接收端粘包,所以就稍微给一点点儿延迟,缓解一下压力,不过实测下来貌似是我多虑了～</p>
+<h4 id="iOS"><a href="#iOS" class="headerlink" title="iOS"></a>iOS</h4><p>以我的尿性,客户端必然是从iOS开始搞的～</p>
+<p>目标很简单,连接服务器,发个文件名,一个劲的收数据,最后显示<code>效果</code></p>
+<p><img src="http://vvk.ixuanlun.com/socket_ios_running.png" alt="iOS效果"></p>
+<p>略～</p>
+<h5 id="Doing"><a href="#Doing" class="headerlink" title="Doing"></a>Doing</h5><p>多年前在CocoaPods上面看到了<a href="https://github.com/robbiehanson/CocoaAsyncSocket" target="_blank" rel="noopener">CocoaAsyncSocket</a>,今天终于要动手搞一搞了！好激动</p>
+<p>一般大家在github的README.md里面都要把自己的库的用法好好的解释一遍,让访问者眼前一亮,然后送出Star,不过这个库真牛逼,README.md里面装了整整一页的逼！</p>
+<p>然后我去wiki里面看,竟然还给了好多个链接,一时半会儿还找不到他的使用方法,不过我看了<a href="https://github.com/robbiehanson/CocoaAsyncSocket/wiki/CommonPitfalls" target="_blank" rel="noopener">CommonPitfalls</a>这个板块,我觉得写的很屌,如果我前面的那些关于socket的废话你没看懂的话,可以去这个链接里面再看看.里面讲了不少误区,坑,雷……</p>
+<p>好吧,其实它真正的用法在<a href="https://github.com/robbiehanson/CocoaAsyncSocket/wiki/Intro_GCDAsyncSocket" target="_blank" rel="noopener">Intro_GCDAsyncSocket</a>里面</p>
+<p>教了连接动作,连接结果,读操作,写操作</p>
+<p>贴代码</p>
+<pre><code>- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view, typically from a nib.
+    socket=[[GCDAsyncSocket alloc]initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+    NSError *error;
+    buf=[NSMutableData data];
+    [socket connectToHost:@&quot;192.168.199.131&quot; onPort:55555 error:&amp;error];
+}
+
+-(IBAction)send_action:(id)sender{
+    [socket writeData:[self.commandField.text  dataUsingEncoding:NSASCIIStringEncoding] withTimeout:5.f tag:12345];
+}
+
+- (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port{
+    NSLog(@&quot;socket is connected&quot;);
+    [self.sendButton setEnabled:YES];
+}
+
+- (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag{
+    NSLog(@&quot;[%ld]Did receive Completely %@,(%ld)&quot;,tag,data,data.length);
+    self.console.text=[NSString stringWithFormat:@&quot;%@\n%@&quot;,data,self.console.text];
+    UIImage *image=[UIImage imageWithData:data];
+    self.imageView.image=image;
+}
+
+- (void)socket:(GCDAsyncSocket *)sock didReadPartialDataOfLength:(NSUInteger)partialLength tag:(long)tag{
+    NSLog(@&quot;[%ld]receive (%lu)*1024 bytes&quot;,tag,partialLength);
+}
+
+- (void)socket:(GCDAsyncSocket *)sock didWriteDataWithTag:(long)tag{
+    if (tag==12345){
+        [sock readDataToData:[@&quot;\nsending ok&quot; dataUsingEncoding:NSASCIIStringEncoding] withTimeout:60.f tag:119];
+    }
+}
+
+- (void)socketDidCloseReadStream:(GCDAsyncSocket *)sock{
+    NSLog(@&quot;socket closed&quot;);
+    [self.sendButton setEnabled:NO];
+}
+
+- (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(nullable NSError *)err
+{
+    NSLog(@&quot;socket disconnect&quot;);
+    NSLog(@&quot;buf is %@&quot;,buf);
+    [self.sendButton setEnabled:NO];
+}
+</code></pre><p>这代码好像蛮长的～</p>
+<p>其中有partial的回调方法都是接收不完整的时候会做的事儿</p>
+<p>Socket本来就是全双工的,就是可以一边儿发送一边儿接收,不过这现在给我做成了个半双工的了,所以我在读取的时候设置了一个结束条件<code>\nsending ok</code>,接收到了这个的时候,就会停止.</p>
+<h4 id="Android"><a href="#Android" class="headerlink" title="Android"></a>Android</h4><p>android上面我想装逼,不用框架,直接用socket来撸,写的还是蛮痛苦的</p>
+<p>先只贴代码,先不做解释了,因为,写的不是特别好……等到优化好了,再写一篇新的,好好解释一番～</p>
+<p>先搞个center</p>
+<pre><code>public class SocketCenter {
+    SocketEntity socket;
+    Handler handler = new Handler();
+    Thread socket_thread;
+    Handler network_handler;
+    public void setup() {
+        EventBus.getDefault().register(this);
+        socket_thread=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+                network_handler=new Handler();
+                Looper.loop();
+            }
+        });
+        socket_thread.start();
+    }
+    public void connect_server() {
+        network_handler.post(new Runnable() {
+            @Override
+            public void run() {
+                socket = new SocketEntity(&quot;192.168.199.131&quot;, 55555, handler);
+                socket.connect();
+            }
+        });
+    }
+    public void disconnect() {
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(SocketEvent event) {
+        if (event.getName().equalsIgnoreCase(EventConstant.Socket_Connected)) {
+            network_handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    socket.ask_for_file(&quot;img1.jpg&quot;, &quot;\nsending ok&quot;);
+                }
+            });
+        }
+    }
+}
+</code></pre><p>再把实例搞出来</p>
+<pre><code>public class SocketEntity {
+    private Socket socket;
+    String address;
+    int port;
+    BufferedReader reader;
+    BufferedWriter writer;
+    byte[] temp_data;
+    ArrayList&lt;byte[]&gt; received_queue;
+    WeakReference&lt;Handler&gt; handler_reference;
+    Thread async_thread;
+    SocketEntity(String address, int port, Handler handler) {
+        socket = new Socket();
+        handler_reference = new WeakReference&lt;Handler&gt;(handler);
+        this.address = address;
+        this.port = port;
+        received_queue = new ArrayList&lt;&gt;();
+        async_thread = new Thread();
+    }
+    Socket getSocket() {
+        return socket;
+    }
+    void connect() {
+        Log.e(&quot;SocketUtil&quot;, &quot;Start Connect&quot;);
+        if (socket != null) {
+            if (!socket.isConnected()) {
+                try {
+                    socket.connect(new InetSocketAddress(address, port), 5000);
+                    writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                    reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    SocketEvent event = SocketEvent.connectEventInstance();
+                    EventBus.getDefault().post(event);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    SocketEvent event = SocketEvent.failBaseEventInstance(-200);
+                    EventBus.getDefault().post(event);
+                    writer = null;
+                    reader = null;
+                }
+            }
+        }
+    }
+    void disconnect() {
+        if (socket != null) {
+            if (socket.isConnected()) {
+                try {
+                    socket.close();
+                    writer.close();
+                    reader.close();
+                    writer = null;
+                    reader = null;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    SocketEvent event = SocketEvent.failBaseEventInstance(-400);
+                    EventBus.getDefault().post(event);
+                    if (!socket.isConnected()) {
+                        writer = null;
+                        reader = null;
+                    }
+                }
+            }
+        }
+    }
+    void ask_for_file(String filename, String endPoint) {
+        send_command(filename);
+//        receive_data_until(endPoint.getBytes());
+        receive_data(endPoint.getBytes());
+    }
+    private void receive_data(byte[] endpoint) {
+        try {
+            char[] buf = new char[1024];
+            int total = 0;
+            boolean isEnd = false;
+            String s = &quot;&quot;;
+            while (!isEnd) {
+                int length = reader.read(buf, 0, 1024);
+                isEnd = (length == -1);
+                if (length &gt; 0) {
+                    char[] valid_data = Arrays.copyOfRange(buf, 0, length);
+                    String string = String.valueOf(valid_data);
+                    s=s+string;
+                    isEnd = string.contains(new String(endpoint));
+                    if (!isEnd) {
+                        total += length;
+                    } else {
+                        total += length;
+                        total -= endpoint.length;
+                    }
+                    Log.e(&quot;Socket_Received&quot;, String.valueOf(HexUtil.encodeHex(string.getBytes())));
+                    Log.e(&quot;String is &quot;, string);
+                }
+            }
+            Log.e(&quot;Socket_Received&quot;, &quot;Total Size is &quot; + total + &quot; bytes&quot;);
+//            temp_data=s.getBytes();
+            temp_data=Arrays.copyOfRange(s.getBytes(),0,total);
+            Log.e(&quot;Socket_Received&quot;, &quot;Total binary Size is &quot; + temp_data.length + &quot; bytes&quot;);
+            SocketEvent event= SocketEvent.fileReceivedEventInstance(temp_data);
+            EventBus.getDefault().post(event);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void receive_data_until(byte[] ends) {
+        try {
+            byte[] temp = null;
+            byte[] temp_buffer = null;
+            while (ends != temp) {
+                String line = reader.readLine();
+                byte[] bytes = line.getBytes();
+                Log.e(&quot;Socket_Received&quot;, String.valueOf(HexUtil.encodeHex(bytes)));
+                int length = ends.length;
+                if (bytes.length &gt;= length) {
+                    temp = Arrays.copyOfRange(bytes, (bytes.length - length), bytes.length);
+                    temp_buffer = line.getBytes();
+                } else if (temp_buffer != null) {
+                    int rear = bytes.length;
+                    int front = ends.length - rear;
+                    if (temp_buffer.length &gt; front) {
+                        temp = new byte[ends.length];
+                        for (int i = 0; i &lt; front; i++) {
+                            temp[i] = temp_buffer[temp_buffer.length - front + i];
+                        }
+                        for (int i = 0; i &lt; rear; i++) {
+                            temp[front + i] = bytes[i];
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void send_command(byte[] command) {
+        String cmd = Arrays.toString(command);
+        send_command(cmd);
+    }
+    private void send_command(String command) {
+        if (socket != null &amp;&amp; socket.isConnected()) {
+            try {
+                Log.e(&quot;SocketUtil&quot;, &quot;Send &quot; + command);
+                writer.write(command);
+                writer.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+                SocketEvent event = SocketEvent.failBaseEventInstance(-1);
+                EventBus.getDefault().post(event);
+            }
+        }
+    }
+}
+</code></pre><p>这里面有很多的问题,不过还是成功的做到了连接,发送指令,接收数据,由于最后<code>BitmapFactory.decodeByteArray</code>存在一些问题,估计和接收的数据有关系,所以没有效果图……(难过)</p>
+<h3 id="End"><a href="#End" class="headerlink" title="End"></a>End</h3><p>先写这么多了,等我下次优化完了,说不定就会有更深入的理解,更好的代码,更加出色的性能,到时候再贴出来留作纪念！</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://vkwk.site/programming/20170928-socket-server-and-client.html" data-id="ckl153wcb0061zxijyhmvnp08" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/unknow/" rel="tag">怎么算呢</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-app-code-sign" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/programming/20170822-app-code-sign.html" class="article-date">
@@ -1061,89 +1440,6 @@ char b;
 
 
   
-    <article id="post-2016-Tired-but-Great" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/life/20170101-2016-Tired-but-Great.html" class="article-date">
-  <time datetime="2017-01-01T03:27:09.000Z" itemprop="datePublished">2017-01-01</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/life/">日记</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/life/20170101-2016-Tired-but-Great.html">2016 To Be Continued</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="这是第7年了"><a href="#这是第7年了" class="headerlink" title="这是第7年了"></a>这是第7年了</h2><p>去年今天,差不多刚考完研,和公司的小伙伴们一起垮了个年. 然后早上起来,装着两副炫轮的自行车就被偷了.</p>
-<p>不知道,今天早上起来会发生什么~</p>
-<p>今年,老实说,没怎么学习…学校里面的东西.</p>
-<p>我对我不喜欢的东西,真的是一点儿兴趣都提不起来……所以,好不容易对<code>最优化理论</code>感兴趣了,好好地复习了几个通宵..结果考成这副鬼样子……</p>
-<h2 id="累"><a href="#累" class="headerlink" title="累"></a>累</h2><p>从2012年来到电子科大,到现在2017年,差不多快5年了.感觉其中的4年都很辛苦.今年更是尤其得累.</p>
-<p>都说程序员死得早,这话倒不是假的,一天从早到晚被显示器辐射,在凳子上可以坐一天,饿了吃点儿垃圾食品,真是又刺激又心酸.</p>
-<p>都说程序员容易猝死,这话也不算假,看看这糟糕的作息,真是和自己的命在闹着玩儿呀…</p>
-<p>之前的几年,每年年末,我都喜欢用<code>cloc</code>来统计一下,当年写了多少行代码,一共写了多少行代码.而今年,我放弃了…今年建立了太多的工程,要用cloc去统计每个工程中<br>我自己写的部分,确实很累.所以就不统计了,反正很多就是了~</p>
-<h2 id="什么东西都略懂一点-生活才会更精彩"><a href="#什么东西都略懂一点-生活才会更精彩" class="headerlink" title="什么东西都略懂一点,生活才会更精彩"></a>什么东西都略懂一点,生活才会更精彩</h2><p>这是诸葛亮金城武说的一句话,我特别喜欢.</p>
-<p>大二的时候我爹就开始嘲讽我”你整天就会写个iOS,有什么用”</p>
-<p>我当时觉得很有道理,而且我也很喜欢金城武那句台词,所以从那时开始,就打算多学一些东西.</p>
-<p>但是,学一个东西,最好的方法就是实践.</p>
-<p>本科阶段没有让我实践的资源.每次学习新东西,都和闹着玩儿一样,写写停停.过了一阵,其实就忘光了.</p>
-<p>不过,今年机会来了不少.创业公司人手和资金都不足,每个人都得被当作好几个人来用.所以,今年好好地过了一把瘾,写了服务器,Android,网页,公众号,Windows程序.</p>
-<p>确实,这些东西,只有搞一下,才知道套路,才能摸着一些门道.</p>
-<h2 id="迟来的反思"><a href="#迟来的反思" class="headerlink" title="迟来的反思"></a>迟来的反思</h2><p>记得刚加入炫轮团队的时候,我还是纯粹的一个iOS开发者,对Android,Windows都特别的不友好.所以一心想用自己iOS版本的软件碾压Android版本的软件.这样大家就都会觉得iPhone比较爽……</p>
-<p>然而,现在看来,觉得自己特别的幼稚.都是自家的产品,即使自己做的东西不丢人,整体有问题,还是很丢人.</p>
-<pre><code>一头狼,可能打不过一只老虎,一头狮子;但是一群狼,就可以天下无敌
-</code></pre><p>自己一味的炫技,并没有多强大.带领整个团队,向外界炫技,才是强大的表现.</p>
-<h2 id="创业"><a href="#创业" class="headerlink" title="创业"></a>创业</h2><p>这真是个沉重的话题.</p>
-<p>2014年,我们初出茅庐,充满激情和热情地把第一款产品推向世界.</p>
-<p>如今,已经是两年了.我们还幸运的存活着.</p>
-<p>这两年遇到了很多挫折,软件问题,硬件问题,销售问题.不断地挖坑填坑,发现问题解决问题,提出这种各样的方法,像吵架一样的讨论方案.</p>
-<p>很辛苦,但是也很刺激.</p>
-<p>辛苦,是肯定的.晚上睡不着,早上醒得早,缺乏运动,长期久坐,吃饭不规律.每个创业团队都遭遇着这样的挫折.</p>
-<p>刺激,看着自己的孩子不断地完善,被市场认可.也是每个创业团队在做的事情.</p>
-<p>所以,多累,都不会抱怨.</p>
-<h4 id="这一章真矫情"><a href="#这一章真矫情" class="headerlink" title="这一章真矫情"></a>这一章真矫情</h4><h2 id="广告"><a href="#广告" class="headerlink" title="广告"></a>广告</h2><p>那么,今年都干了些什么呢?</p>
-<p>花了三个月,重写了一遍炫轮.上一版在后台显示崩溃数量一大把,这次经过改版,不仅功能强大了,界面好看了,连崩溃都少了很多了.</p>
-<p>定位器是个好东西,我觉得算得上是一种刚性需求.所以我们给一个鞋子公司做了一款定位器,用户购买了鞋子之后,可以通过微信公众号,看到这个鞋子的位置.真是小孩防丢,老人防丢,(出轨取证),犯人防丢的必备神器.</p>
-<p>如果说炫轮可以装逼给两边的行人看,那么尾灯就是装逼给后面的骑友看了.这是一个向后面人刷存在感的神器.这是一个可以换图,可以告诉后面人我要左转还是右转的神器.</p>
-<p>今年一共丢了2辆自行车,真的好气啊.下次你们再偷,我要把你们找到,然后暴打一顿!不过小偷们也很聪明,如果车上有那么些看起来像跟踪器一样的东西,一定会把他们砸了再偷走的.所以,我们需要一个隐蔽性极强的跟踪装置~007追踪水壶架!长得很漂亮,<code>漂亮的不像实力派</code>.<br>当你的爱车被坏人移动的时候,系统会记录位置,并且通知到你的手机app上面.小偷往哪儿走,一目了然.关键是,他可以用半年充一次电!</p>
-<p>这可真是硬广</p>
-<h4 id="收藏图片"><a href="#收藏图片" class="headerlink" title="收藏图片"></a>收藏图片</h4><p>今年还参与了一个眉山检察院的信息录入项目的开发,至于为什么这一段要叫做<code>收藏图片</code>,只有一起干活儿的小伙伴们才知道了.嘿嘿嘿.</p>
-<p>眉山检察院的食堂真好吃…是自助的!吃的真爽.</p>
-<h2 id="还是广告"><a href="#还是广告" class="headerlink" title="还是广告"></a>还是广告</h2><p>如果你不是在 <a href="https://vkwk.space" target="_blank" rel="noopener">vkwk.space</a> 上面看的这篇文章,那这个广告就没得打了……</p>
-<h4 id="else"><a href="#else" class="headerlink" title="else"></a>else</h4><p>这个博客是使用 <a href="https://hexo.io" target="_blank" rel="noopener">hexo</a> 搭建的,这可真是节约时间! <code>博客重要的是内容</code> ,如果我花很多时间去考虑如何设计博客的服务器逻辑怎么写,那我估计还得再写两年~</p>
-<h2 id="结束语"><a href="#结束语" class="headerlink" title="结束语"></a>结束语</h2><p>2016 很累 但是 很值得 <code>(这是本来的标题)</code></p>
-<p>2016 一切 都 还没有结束</p>
-<p>2017.1.1</p>
-<p>VikingWarlock</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://vkwk.site/life/20170101-2016-Tired-but-Great.html" data-id="ckl153w9u000lzxijx0iqxx85" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
 
 
   <nav id="page-nav">
@@ -1186,7 +1482,7 @@ char b;
   <div class="widget-wrap">
     <h3 class="widget-title">归档</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/02/">二月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/02/">二月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">一月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">十月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">九月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">八月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">十一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">九月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">八月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">六月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">二月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/01/">一月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">六月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">五月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/01/">一月 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/01/">一月 2015</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2014/01/">一月 2014</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/11/">十一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2013/01/">一月 2013</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/10/">十月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/09/">九月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2012/01/">一月 2012</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2011/01/">一月 2011</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2010/01/">一月 2010</a></li></ul>
     </div>
   </div>
 
@@ -1197,6 +1493,10 @@ char b;
     <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/life/20220206-2022-noname.html">2021 roll king</a>
+          </li>
         
           <li>
             <a href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
@@ -1214,10 +1514,6 @@ char b;
             <a href="/uncategorized/20191027-xml-validation.html">XML格式校验</a>
           </li>
         
-          <li>
-            <a href="/study/20191004-ansible.html">ansible</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -1230,7 +1526,7 @@ char b;
   
   <div class="outer">
     <div id="footer-info" class="inner">
-      &copy; 2021 Viking Warlock<br>
+      &copy; 2023 Viking Warlock<br>
       Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>

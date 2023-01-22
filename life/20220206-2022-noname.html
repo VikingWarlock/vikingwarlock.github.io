@@ -3,22 +3,20 @@
 <head>
   <meta charset="utf-8">
   
-  <title>突变的SHA1 | VikingWarlock</title>
+  <title>2021 roll king | VikingWarlock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Do not click so fast...">
+  <meta name="description" content="Once a year">
 <meta property="og:type" content="article">
-<meta property="og:title" content="突变的SHA1">
-<meta property="og:url" content="http://vkwk.site/programming/20170822-app-code-sign.html">
+<meta property="og:title" content="2021 roll king">
+<meta property="og:url" content="http://vkwk.site/life/20220206-2022-noname.html">
 <meta property="og:site_name" content="VikingWarlock">
-<meta property="og:description" content="Do not click so fast...">
+<meta property="og:description" content="Once a year">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://vvk.ixuanlun.com/google_map_not_work.jpg">
-<meta property="article:published_time" content="2017-08-21T23:39:33.000Z">
-<meta property="article:modified_time" content="2021-02-11T07:36:52.986Z">
+<meta property="article:published_time" content="2022-02-06T01:06:46.000Z">
+<meta property="article:modified_time" content="2022-02-05T19:14:43.664Z">
 <meta property="article:author" content="Viking Warlock">
-<meta property="article:tag" content="Android">
+<meta property="article:tag" content="年记">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://vvk.ixuanlun.com/google_map_not_work.jpg">
   
     <link rel="alternate" href="/atom.xml" title="VikingWarlock" type="application/atom+xml">
   
@@ -69,14 +67,14 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-app-code-sign" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-2022-noname" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/programming/20170822-app-code-sign.html" class="article-date">
-  <time datetime="2017-08-21T23:39:33.000Z" itemprop="datePublished">2017-08-21</time>
+    <a href="/life/20220206-2022-noname.html" class="article-date">
+  <time datetime="2022-02-06T01:06:46.000Z" itemprop="datePublished">2022-02-06</time>
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/programming/">编程</a>
+    <a class="article-category-link" href="/categories/life/">日记</a>
   </div>
 
   </div>
@@ -87,7 +85,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      突变的SHA1
+      2021 roll king
     </h1>
   
 
@@ -95,66 +93,30 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h3><p>故事从两个低分评价开始.</p>
-<p>那一天,Google Play上面,Cycplus 007突然惊现两个低分评价,除了一个翻译的小问题之外,他们还异口同声的反应到,他们的报警界面上的Google Map里面空白一片了,什么都不显示.</p>
-<p>在全球发售之前,我们特地把样品寄到了全球各地(的某些地方),进行测试,以保证我们的产品是可以在海外正常工作的.</p>
-<p>而且这两个用户都是波兰人,难道,波兰的Google也被禁了？hahaha</p>
-<p>那是不可能的,他们可是从Google Play上面下载的App</p>
-<h3 id="Google-and-Android"><a href="#Google-and-Android" class="headerlink" title="Google and Android"></a>Google and Android</h3><p>突然,我陷入了恐慌.在很久很久之前我担心的一个问题,不会灵验了吧！</p>
-<p>我们知道,Android是Google的,但是Android上面又可以没有google的东西(国产手机们基本上都没有Google Play套件),那Google Map作为Android的原生地图,会不会在那些缺少Google套件的手机上无法运行呢？</p>
-<p>毕竟,iOS是可以直接使用原生地图的,使用原生地图还可以节省不少的空间呢,因为原生的地图空间,所需要的容量早就算在系统里面了～</p>
-<p>所以我就很担心,会不会只有安装了Google Play套件的手机才可以使用Google Play～</p>
-<p>操作了一番,竟然是真的.</p>
-<p><img src="http://vvk.ixuanlun.com/google_map_not_work.jpg" alt="GoogleMapNotWorking"></p>
-<p>不过回头一想,他们是Google Play上面下载的App,难道会没有Google Play套件？</p>
-<h3 id="Debug"><a href="#Debug" class="headerlink" title="Debug"></a>Debug</h3><p>我自信满满地再一次打开了app,看着正常运行的Google Map,陷入了沉思.</p>
-<p>我不明白为什么我就可以运行</p>
-<p>然后我就删掉了本地的App,从Google Play上面再下载了一份,运行起来,</p>
-<p><code>竟然真的是空白！</code></p>
-<p>吓得我突然之间手忙脚乱,手足无措,明明之前都是可以使用的,突然之间怎么就坏掉了！</p>
-<p>我连接上数据线,查看catlog,竟然发现Google Map说我的签名错了！</p>
-<p>我急忙登上Google Console,并且用keytool查看了我打包时候使用的Sha1:</p>
-<pre><code>1B:xxxxxxx
-</code></pre><p>在Google Console上面登记着的:</p>
-<pre><code>1B:xxxxxxx
-</code></pre><p>catlog里面写着我使用的Sha1:</p>
-<pre><code>ED:xxxxxxx
-</code></pre><h4 id="What-the-fuck"><a href="#What-the-fuck" class="headerlink" title="What the fuck?"></a>What the fuck?</h4><p>怎么,怎么会变了呢</p>
-<h3 id="Google-Play-App-Signing"><a href="#Google-Play-App-Signing" class="headerlink" title="Google Play App Signing"></a>Google Play App Signing</h3><p>在Google Play的Console里面有一个菜单是<code>应用签名</code></p>
-<p>在里面我惊奇的发现了两个证书：</p>
-<pre><code>-应用签名证书
--上传证书
-</code></pre><p>而我登记在Google Map的Console里面的正是这个上传证书,而下载安装之后显示的,是这个应用签名证书的Sha1</p>
-<p>这时我恍然大悟,前几天着急更新的时候,好像是点击了一个什么<code>Google Play App Signing</code>之类的按钮,当时也没管它是干什么的,就着急的去更新软件了.</p>
-<p>下面来转载一下他的官方介绍：</p>
-<pre><code>Without Google Play App Signing: You sign the app with your app signing key, upload your app to Google Play, and then your app is delivered to the user.
+        <h2 id="Year-12"><a href="#Year-12" class="headerlink" title="Year 12"></a>Year 12</h2><p>这一年过的似乎也很快，有精彩的部分，有划水的部分，有后悔的部分，也有成长的部分。</p>
+<p>这一年异常的卷</p>
+<p>世界在卷：国家和国家之间卷。不管你的产品有没有安全问题，反正我说你有问题，你就不能卖，价格战？不存在的。</p>
+<p>行业在卷：一个产品在不同的公司上不断地“优化”，这么点儿蛋糕，这么多公司来分。哎，毕竟抄一个商业模式比想一个商业模式简单多了，成本还低，前任还试错过了，为什么不卷一下？都是钱啊</p>
+<p>公司在卷：你们不仅要支撑xxx还要沉淀yyy，这样才能体现你们的价值。要提高研发效能，再提高一点，再高一点，再一点，再点。</p>
+<p>员工在卷：你写了多少行？你完成了几个需求？你的PPT咋做？你先走吧，我在干会儿。深夜push一下应该没人看得到~</p>
+<p>就连KFC和McDonald都在互相卷：你出39元的半只烤鸡？我出39元的烤全鸡！来啊，卷死你。</p>
+<p>这么卷的下场就是，疯狂加速。在疫情期间，大环境不景气的时候，为了保证一些数据的增长，只能通过内卷，通过没有需求就创造需求等方式来解决。这实际上就是在增加通胀，慢慢的胀起来，大家就感受不到疫情带来的经济问题了。强行进行消费升级，宣传高品质的消费，让大家的工资和消费都提高了，那数字不就好看了嘛？（狗头</p>
+<p>而我，也在卷。我，也在加速。</p>
+<h2 id="2021"><a href="#2021" class="headerlink" title="2021"></a>2021</h2><p>生活基本上还是和去年一样，在疫情这个大环境下，除了工作就是在宅，2020年7月就想去的迪士尼在2022年2月依然没去成。除了出差和参加邹师兄的婚礼，就没出过省。不过好在这一年出了很多的差，让我解锁了几个新城市：昆明(深度版)，海口，北京(大学后第一次)。让我可以回成都见见老朋友，吃吃那熟悉的味道。7天的年假依旧没有用完，在10月份一把休完，感觉10月就没剩几天了。</p>
+<p>周末睡觉醒来后、打开电脑准备搞点业余的东西，然后总是不知不觉的打开了某一个游戏，然后会有下面的心路历程：玩一会儿就工作-》一边玩一边工作也行-》算了明天再工作吧</p>
+<p>2021年都有哪些游戏祸害了我呢？罪魁祸首：彩虹六号、逃离塔克夫。其他同党：PUBG、战锤、星露谷、红色警戒、帝国时代2。我希望各位在2022年能够少来骚扰我。让我多多出门吧</p>
+<h3 id="盖盖篇"><a href="#盖盖篇" class="headerlink" title="盖盖篇"></a>盖盖篇</h3><p>盖盖1岁了，想人的时候会可爱的叫两下。叫她的名字，有时能得到回应，而这回应竟然会让我非常开心。每次调皮完露出那可爱无辜的表情时，一切愤怒都会消失。</p>
+<p>看到她无忧无虑的活着，对身边的一切都充满了好奇，真是令人羡慕。不像我，逐渐被抱怨填充了。</p>
+<h3 id="别离"><a href="#别离" class="headerlink" title="别离"></a>别离</h3><h3 id="后路"><a href="#后路" class="headerlink" title="后路"></a>后路</h3><h3 id="工作"><a href="#工作" class="headerlink" title="工作"></a>工作</h3><h3 id="jjj"><a href="#jjj" class="headerlink" title="jjj"></a>jjj</h3><h3 id="理性与不理性的消费"><a href="#理性与不理性的消费" class="headerlink" title="理性与不理性的消费"></a>理性与不理性的消费</h3><h3 id="FDDM"><a href="#FDDM" class="headerlink" title="FDDM"></a>FDDM</h3><h2 id="wish-list"><a href="#wish-list" class="headerlink" title="wish list"></a>wish list</h2><p>从今年开始，增加这个固定的栏目，用来记录下一年心愿单上想要做的事情。<br>1.能不能去一次迪士尼了？<br>2.去一趟澳门<br>3.去成都过一个周末<br>4.年假不要到最后用！<br>5.能不能为35岁留点儿什么？<br>6.能不能进入人生的下一阶段？</p>
+<h2 id="End"><a href="#End" class="headerlink" title="End"></a>End</h2><p>2022希望自己可以管住欲望，可以更多的体验生活</p>
 
-With Google Play App Signing: You sign your app with your upload key. Then, Google verifies and removes the upload key signature. Finally, Google re-signs the app with the original app signing key you provided and delivers your app to the user.
-</code></pre><p>总之他的意思大概是担心坏人得到了这个apk之后,通过各种我反正不懂的方法之后,可以得到原来签名的key</p>
-<p>这会不安全,所以Google用各种我反正不懂的方法,把这个原来签名的key给去掉,换一个它自己的key,这样子就不会被坏人破解出上传APK的key,来做坏事儿了.</p>
-<p>看起来确实,是稍微安全了一些呢</p>
-<p>下面还介绍了可以设置的各种key,反正我(你)可能也用不到,我就不说了</p>
-<p>可是</p>
-<h4 id="最关键的是："><a href="#最关键的是：" class="headerlink" title="最关键的是："></a>最关键的是：</h4><h4 id="进来了-还想走？"><a href="#进来了-还想走？" class="headerlink" title="进来了,还想走？"></a>进来了,还想走？</h4><pre><code>Google Play App Signing is an optional program. If you prefer, you can continue managing your own keys.
-
-Once you&apos;ve enrolled your app in Google Play App Signing, withdrawal is not supported. To preserve the security of your app signing keys, we don&apos;t have the ability to remove keys from the secure server.
-</code></pre><p>这就很是麻烦了……因为国外我们可以在Google Play中下载,但是国内我们将安装文件放在了服务器上,供用户直接下载安装.</p>
-<p>而国内这个安装文件,肯定使用的是upload key,所以,他们的Sha1是不一样的.</p>
-<p>可能这个情况Google早就考虑到了,所以在Google Map的Console中,我们是可以添加好多好多个Sha1的,所以加上一个新的Sha1之后,Google Play版本的用户就可以正常使用Google Map了.</p>
-<h4 id="但是"><a href="#但是" class="headerlink" title="但是"></a>但是</h4><p>百度地图没有想到这个问题,他们的配置界面只有两个Sha1可以填写,而且一个事发布饭一个是开发版.</p>
-<p>这就意味着,如果开发版里面填写着我自己debug用的sha1,那么Google Play的用户或者国内用户中,至少有一方是不能使用百度地图查看他们的报警信息的</p>
-<h4 id="你大概会觉得："><a href="#你大概会觉得：" class="headerlink" title="你大概会觉得："></a>你大概会觉得：</h4><p>反正外国人不会用百度地图的,就不用给他们添加到配置页面了咯</p>
-<h5 id="NO"><a href="#NO" class="headerlink" title="NO"></a>NO</h5><p>我就是在国内,使用Google Play的中国人……我相信还有很多人会和我一样,因为害怕国内的商店太霸道,又不喜欢App内更新,所以我还是喜欢和App Store一样的商店.</p>
-<p>于是乎,我就只能把debug的key换了下来,改成了Google play的sha1</p>
-<h3 id="End"><a href="#End" class="headerlink" title="End"></a>End</h3><p>这个故事并没有涉及到什么高深的技术,但是却说明了很重要的一件事</p>
-<h4 id="鼠标点慢一些！"><a href="#鼠标点慢一些！" class="headerlink" title="鼠标点慢一些！"></a>鼠标点慢一些！</h4>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://vkwk.site/programming/20170822-app-code-sign.html" data-id="ckl153wam002dzxijege3orct" class="article-share-link">Share</a>
+      <a data-url="http://vkwk.site/life/20220206-2022-noname.html" data-id="cld7blhmr00000gij4if2101q" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/android/" rel="tag">Android</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/yearly/" rel="tag">年记</a></li></ul>
 
     </footer>
   </div>
@@ -162,19 +124,10 @@ Once you&apos;ve enrolled your app in Google Play App Signing, withdrawal is not
     
 <nav id="article-nav">
   
-    <a href="/programming/20170928-socket-server-and-client.html" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          Socket
-        
-      </div>
-    </a>
   
-  
-    <a href="/programming/20170818-ios-image-get-color.html" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/life/20210211-2021-what-a-tough-year.html" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">iOS图片取色</div>
+      <div class="article-nav-title">重启2020</div>
     </a>
   
 </nav>
