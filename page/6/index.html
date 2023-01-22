@@ -67,7 +67,7 @@
 
     <!-- Custom CSS -->
     
-<link rel="stylesheet" href="/hexosource/css/style.css">
+<link rel="stylesheet" href="/css/style.css">
 
 
     <!-- Google Analytics -->
@@ -89,37 +89,37 @@
         <ul>
             
             <li class="menu-item">
-                <a href="/hexosource/">
+                <a href="/">
                     Home
                 </a>
             </li>
             
             <li class="menu-item">
-                <a href="/hexosource/archives">
+                <a href="/archives">
                     Archives
                 </a>
             </li>
             
             <li class="menu-item">
-                <a href="/hexosource/about.html">
+                <a href="/about.html">
                     About
                 </a>
             </li>
             
             <li class="menu-item">
-                <a href="/hexosource/tags">
+                <a href="/tags">
                     Tags
                 </a>
             </li>
             
             <li class="menu-item">
-                <a href="/hexosource/categories">
+                <a href="/categories">
                     Categories
                 </a>
             </li>
             
             <li class="menu-item">
-                <a href="/hexosource/contact.html">
+                <a href="/contact.html">
                     Contact
                 </a>
             </li>
@@ -142,7 +142,7 @@
         <!--Title and Logo-->
         <header>
     <div class="logo">
-        <a href="/hexosource/"><i class="logo-icon fa fa-cube" aria-hidden="true"></i></a>
+        <a href="/"><i class="logo-icon fa fa-cube" aria-hidden="true"></i></a>
         
             <h1 id="main-title" class="title">VikingWarlock</h1>
         
@@ -156,7 +156,48 @@
 
     <div class="post-header index">
         <h1 class="title">
-            <a href="/hexosource/life/20170101-2016-Tired-but-Great.html">
+            <a href="/programming/20170105-block-convenient-dangerous.html">
+                Block--方便而危险
+            </a>
+        </h1>
+        <div class="post-info">
+            
+                <span class="date">2017-01-05</span>
+            
+            
+            
+                <span class="category">
+                    <a href="/categories/programming/">编程</a>
+                </span>
+            
+        </div>
+    </div>
+
+    
+        <div class="content">
+            <h2 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h2><p>Block真的很好用对不对?记得很早以前用ASIHttp来做网络请求的时候,得用delegate,然后每次请求的<br>delegate回调中都要做一下判断,才能知道这个回调是回应了具体哪一次请求,这还是蛮麻烦的.</p>
+<p>不过Block出现了,对网络请求的response操作,就可以直接写在block中,不用去判断这个response谁否对应与当前这个request.</p>
+<p>除了网络请求,Alert的回调啊,asyncsocket啊,之类的异步操作,用了block都特别的方便.</p>
+<h2 id="Situation"><a href="#Situation" class="headerlink" title="Situation"></a>Situation</h2><p>然而,有一天我们在炫轮iOS端的DIY界面中发现了一个bug,而这个bug预示着,<br>我有实例没有成功释放.</p>
+<h2 id="Reason"><a href="#Reason" class="headerlink" title="Reason"></a>Reason</h2><p>于是我就一行一行的找,感觉没有什么地方出现.但是我发现了一个现象:</p>
+<p>我在使用SCLAlertView了之后,就出现了这个bug,所以我就重点查看SCLAlertView的相关代码,<br>经过排查,我觉得问题只能出现在dismissBlock上.查看了dismissBlock的声明代码,他是个strong~</p>
+<p>我想,这里应该是出现了一个循环引用…block中的内容,在声明的时候,会copy一份当时的数据.当AlertView 消失的时候,<br>调用了dismissBlock,然而,dismissBlock中的内容有引用当前的ViewController,所以.</p>
+<p>他们互相引用了!</p>
+<p>所以只能在dismissBlock的最后加一行,把这个dismissBlock设置为nil.解决了~</p>
+<h2 id="End"><a href="#End" class="headerlink" title="End"></a>End</h2><p>这次要不是遇到了这个坑,说不定永远也不会去仔细看Block实现的原理~</p>
+<p>关键就是这个copy,所以在block中如果引用了(强引用了该block的)类,就一定要注意,检查会不会出现循环引用!</p>
+
+        </div>
+    
+
+</div>
+            
+                
+<div class="post">
+
+    <div class="post-header index">
+        <h1 class="title">
+            <a href="/life/20170101-2016-Tired-but-Great.html">
                 2016 To Be Continued
             </a>
         </h1>
@@ -167,7 +208,7 @@
             
             
                 <span class="category">
-                    <a href="/hexosource/categories/life/">日记</a>
+                    <a href="/categories/life/">日记</a>
                 </span>
             
         </div>
@@ -227,7 +268,7 @@
 
     <div class="post-header index">
         <h1 class="title">
-            <a href="/hexosource/programming/20161230-bluetooth-permission.html">
+            <a href="/programming/20161230-bluetooth-permission.html">
                 蛋疼的GATT权限
             </a>
         </h1>
@@ -238,7 +279,7 @@
             
             
                 <span class="category">
-                    <a href="/hexosource/categories/programming/">编程</a>
+                    <a href="/categories/programming/">编程</a>
                 </span>
             
         </div>
@@ -294,7 +335,7 @@
 
     <div class="post-header index">
         <h1 class="title">
-            <a href="/hexosource/programming/20161225-first-time-volley.html">
+            <a href="/programming/20161225-first-time-volley.html">
                 初用Volley
             </a>
         </h1>
@@ -305,7 +346,7 @@
             
             
                 <span class="category">
-                    <a href="/hexosource/categories/programming/">编程</a>
+                    <a href="/categories/programming/">编程</a>
                 </span>
             
         </div>
@@ -507,7 +548,7 @@ public interface VKNetworkFailBlock {
 
     <div class="post-header index">
         <h1 class="title">
-            <a href="/hexosource/programming/20161221-use-status-base-to-handle-complex-operation.html">
+            <a href="/programming/20161221-use-status-base-to-handle-complex-operation.html">
                 用状态机来实现复杂操作
             </a>
         </h1>
@@ -518,7 +559,7 @@ public interface VKNetworkFailBlock {
             
             
                 <span class="category">
-                    <a href="/hexosource/categories/programming/">编程</a>
+                    <a href="/categories/programming/">编程</a>
                 </span>
             
         </div>
@@ -572,7 +613,7 @@ BOOL didReadXXX;
 
     <div class="post-header index">
         <h1 class="title">
-            <a href="/hexosource/programming/20161214-filter-bluetooth-in-android.html">
+            <a href="/programming/20161214-filter-bluetooth-in-android.html">
                 Android上的蓝牙
             </a>
         </h1>
@@ -583,7 +624,7 @@ BOOL didReadXXX;
             
             
                 <span class="category">
-                    <a href="/hexosource/categories/programming/">编程</a>
+                    <a href="/categories/programming/">编程</a>
                 </span>
             
         </div>
@@ -721,7 +762,7 @@ Manufacturer specific data which is the data associated with a particular manufa
 
     <div class="post-header index">
         <h1 class="title">
-            <a href="/hexosource/hack/20161002-picture-secret-1.html">
+            <a href="/hack/20161002-picture-secret-1.html">
                 图片的小秘密
             </a>
         </h1>
@@ -732,7 +773,7 @@ Manufacturer specific data which is the data associated with a particular manufa
             
             
                 <span class="category">
-                    <a href="/hexosource/categories/hack/">黑科技</a>
+                    <a href="/categories/hack/">黑科技</a>
                 </span>
             
         </div>
@@ -823,7 +864,7 @@ Manufacturer specific data which is the data associated with a particular manufa
 
     <div class="post-header index">
         <h1 class="title">
-            <a href="/hexosource/programming/20160925-wechat-verify.html">
+            <a href="/programming/20160925-wechat-verify.html">
                 微信小网页的安全性
             </a>
         </h1>
@@ -834,7 +875,7 @@ Manufacturer specific data which is the data associated with a particular manufa
             
             
                 <span class="category">
-                    <a href="/hexosource/categories/programming/">编程</a>
+                    <a href="/categories/programming/">编程</a>
                 </span>
             
         </div>
@@ -871,7 +912,7 @@ Manufacturer specific data which is the data associated with a particular manufa
 
     <div class="post-header index">
         <h1 class="title">
-            <a href="/hexosource/programming/20160923-android-first-experience.html">
+            <a href="/programming/20160923-android-first-experience.html">
                 安卓初体验?
             </a>
         </h1>
@@ -882,7 +923,7 @@ Manufacturer specific data which is the data associated with a particular manufa
             
             
                 <span class="category">
-                    <a href="/hexosource/categories/programming/">编程</a>
+                    <a href="/categories/programming/">编程</a>
                 </span>
             
         </div>
@@ -1011,7 +1052,7 @@ public void onClick(View v) {
 
     <div class="post-header index">
         <h1 class="title">
-            <a href="/hexosource/life/20160920-we-do-what-we-want-to-do.html">
+            <a href="/life/20160920-we-do-what-we-want-to-do.html">
                 We do what we want to do
             </a>
         </h1>
@@ -1022,7 +1063,7 @@ public void onClick(View v) {
             
             
                 <span class="category">
-                    <a href="/hexosource/categories/life/">日记</a>
+                    <a href="/categories/life/">日记</a>
                 </span>
             
         </div>
@@ -1058,52 +1099,6 @@ public void onClick(View v) {
 
 </div>
             
-                
-<div class="post">
-
-    <div class="post-header index">
-        <h1 class="title">
-            <a href="/hexosource/study/20160909-all-mitrix.html">
-                全都是矩阵~
-            </a>
-        </h1>
-        <div class="post-info">
-            
-                <span class="date">2016-09-09</span>
-            
-            
-            
-                <span class="category">
-                    <a href="/hexosource/categories/study/">学习</a>
-                </span>
-            
-        </div>
-    </div>
-
-    
-        <div class="content">
-            <p>研究生的课上了一周了,选课系统有多难过,就不吐槽了.</p>
-<p>还好机智的我在选课之前就已经做了充足的准备,保证没有冲突的课,并且确定了抢课顺序.</p>
-<p>但是,顺利的抢完课,去听了听课,才有点儿后悔…</p>
-<p>信号分析导论: 函数信号集合正交</p>
-<p>最优化理论: 正定矩阵,范数……</p>
-<p>矩阵理论: 那都是矩阵</p>
-<p>嗯,好像难一点的课,都和矩阵有关!!</p>
-<p>关键是,矩阵理论我每次都没有位置坐,大家都太积极了!</p>
-<p><code>课后自己自学失败</code></p>
-<p>我只想对大家说…</p>
-<p><code>Don&#39;t make me have to hurt you!!</code></p>
-<p>公司新产品研发和研究生那么一堆课,交织在一起…</p>
-<p>这是逼着我求肖奈大神附体嘛~</p>
-<p>这几周写前端写的我,都有点对iOS手生了…虽然前端真的很爽,但是,</p>
-<p>我水平还是太烂了……</p>
-<p>等这些产品都上架了,好好地重构一下吧! (好像官网还没写…T_T)</p>
-
-        </div>
-    
-
-</div>
-            
         </section>
     </div>
 </div>
@@ -1113,10 +1108,10 @@ public void onClick(View v) {
     <div class="row">
         <div class="col-sm-12">
             <div class="wrap-pagination">
-                <a class="" href="/hexosource/page/5/">
+                <a class="" href="/page/5/">
                     <i class="fa fa-chevron-left" aria-hidden="true"></i>
                 </a>
-                <a class="" href="/hexosource/page/7/">
+                <a class="" href="/page/7/">
                     <i class="fa fa-chevron-right" aria-hidden="true"></i>
                 </a>
             </div>
@@ -1146,19 +1141,19 @@ public void onClick(View v) {
         <ul>
             
             <li>
-                <a class="footer-post" href="/hexosource/life/20220206-2022-noname.html">2021 roll king</a>
+                <a class="footer-post" href="/life/20230123-2023-reconciliation.html">2023 reconciliation</a>
             </li>
             
             <li>
-                <a class="footer-post" href="/hexosource/life/20210211-2021-what-a-tough-year.html">重启2020</a>
+                <a class="footer-post" href="/life/20220206-2022-noname.html">2021 roll king</a>
             </li>
             
             <li>
-                <a class="footer-post" href="/hexosource/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
+                <a class="footer-post" href="/life/20210211-2021-what-a-tough-year.html">重启2020</a>
             </li>
             
             <li>
-                <a class="footer-post" href="/hexosource/uncategorized/20191027-digital-signature-and-verification.html">数字签名于验签</a>
+                <a class="footer-post" href="/life/20200121-2020-enbrace-change.html">2020唯一不变的是变化</a>
             </li>
             
         </ul>
@@ -1172,19 +1167,19 @@ public void onClick(View v) {
     <ul>
         
         <li>
-            <a class="footer-post" href="/hexosource/categories/hack/">黑科技</a>
+            <a class="footer-post" href="/categories/hack/">黑科技</a>
         </li>
         
         <li>
-            <a class="footer-post" href="/hexosource/categories/book/">书记</a>
+            <a class="footer-post" href="/categories/book/">书记</a>
         </li>
         
         <li>
-            <a class="footer-post" href="/hexosource/categories/wtf/">什么鬼</a>
+            <a class="footer-post" href="/categories/wtf/">什么鬼</a>
         </li>
         
         <li>
-            <a class="footer-post" href="/hexosource/categories/study/">学习</a>
+            <a class="footer-post" href="/categories/study/">学习</a>
         </li>
         
     </ul>
@@ -1310,7 +1305,7 @@ public void onClick(View v) {
 
 <!-- Custom JavaScript -->
 
-<script src="/hexosource/js/main.js"></script>
+<script src="/js/main.js"></script>
 
 
 <!-- Disqus Comments -->

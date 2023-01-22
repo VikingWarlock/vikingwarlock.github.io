@@ -10,7 +10,7 @@
 
     <!--Description-->
     
-        <meta name="description" content="Sublime Text is fucking awesome!!">
+        <meta name="description" content="Once a year">
     
 
     <!--Author-->
@@ -20,12 +20,12 @@
 
     <!--Open Graph Title-->
     
-        <meta property="og:title" content="Sublime 开发arduino"/>
+        <meta property="og:title" content="2023 reconciliation"/>
     
 
     <!--Open Graph Description-->
     
-        <meta property="og:description" content="Sublime Text is fucking awesome!!" />
+        <meta property="og:description" content="Once a year" />
     
 
     <!--Open Graph Site Name-->
@@ -47,7 +47,7 @@
 
     <!-- Title -->
     
-    <title>Sublime 开发arduino - VikingWarlock</title>
+    <title>2023 reconciliation - VikingWarlock</title>
 
     <!-- Bootstrap Core CSS -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/css/bootstrap.min.css" integrity="sha384-y3tfxAZXuh4HwSYylfB+J125MxIs6mR5FOHamPBG064zB+AFeWH94NdvaCBm8qnd" crossorigin="anonymous">
@@ -153,18 +153,18 @@
 
     <div class="post-header">
         <h1 class="title">
-            <a href="/programming/20160528-sublime-develop-arduino.html">
-                Sublime 开发arduino
+            <a href="/life/20230123-2023-reconciliation.html">
+                2023 reconciliation
             </a>
         </h1>
         <div class="post-info">
             
-                <span class="date">2016-05-28</span>
+                <span class="date">2023-01-23</span>
             
             
             
                 <span class="category">
-                    <a href="/categories/programming/">编程</a>
+                    <a href="/categories/life/">日记</a>
                 </span>
             
         </div>
@@ -176,30 +176,7 @@
         
 
         <!-- Post Content -->
-        <h3 id="把Sublime改装成arduino的IDE"><a href="#把Sublime改装成arduino的IDE" class="headerlink" title="把Sublime改装成arduino的IDE"></a>把Sublime改装成arduino的IDE</h3><p>参加一个物联网比赛,它要求使用的开发板是基于Arduino的.可是,Arduino自己做的IDE简直难过死了,没有自动不全,也不能输入中文所以我想了一下,强大的sublime一定是有arduino的插件的！</p>
-<h3 id="安装Sublime"><a href="#安装Sublime" class="headerlink" title="安装Sublime"></a>安装Sublime</h3><p>Sublime很牛逼,三个平台都有,百度上面一搜,去官网下载就好了,安装也不麻烦,所以就不说了</p>
-<h3 id="安装package-control"><a href="#安装package-control" class="headerlink" title="安装package-control"></a>安装package-control</h3><p>Sublime 有两个发行版Sublime Text 2 和 Sublime Text 3<br>针对这两个不同的版本方法也是不一样的</p>
-<ol>
-<li>Ctrl(Command) + <code>~</code> 呼出命令行</li>
-<li>直接把下面的代码往里面怼,然后按Enter(Return)</li>
-<li>等</li>
-</ol>
-<p>Sublime Text 2 的安装方法:</p>
-<pre><code>import urllib2,os; pf=&apos;Package Control.sublime-package&apos;; ipp =sublime.installed_packages_path(); os.makedirs( ipp ) if not os.path.exists(ipp) else None; urllib2.install_opener( urllib2.build_opener(urllib2.ProxyHandler( ))); open( os.path.join( ipp, pf),&apos;wb&apos; ).write( urllib2.urlopen(&apos;http://sublime.wbond.net/&apos; +pf.replace( &apos;&apos;,&apos;%20&apos; )).read()); print( &apos;Please restart Sublime Text to finish installation&apos;)
-</code></pre><p>Sublime Text 3 的安装方法:</p>
-<pre><code>import urllib.request,os; pf = &apos;Package Control.sublime-package&apos;; ipp=sublime.installed_packages_path();urllib.request.install_opener(urllib.request.build_opener(urllib.request.ProxyHandler()) ); open(os.path.join(ipp, pf),&apos;wb&apos;).write(urllib.request.urlopen( &apos;http://sublime.wbond.net/&apos; +pf.replace(&apos; &apos;,&apos;%20&apos;)).read())
-</code></pre><p>原来都是python语句(我总觉得sublime text的作者一定钟爱python)</p>
-<h3 id="安装stino"><a href="#安装stino" class="headerlink" title="安装stino"></a>安装stino</h3><ol>
-<li>Crtl+Shift+P 打开另一种命令行</li>
-<li>输入<code>Package Control: Add Repository</code>,按个Enter(Return)</li>
-<li>输入Stino的开源地址 <code>https://github.com/gepd/Stino/tree/new-stino</code>,按个Enter(Return)</li>
-<li>Ctrl+Shift+P 再一遍,输入<code>Package Control: Install Package</code></li>
-<li>等他更新完所有的源之后,输入stino,安装就好啦</li>
-</ol>
-<h3 id="后续"><a href="#后续" class="headerlink" title="后续"></a>后续</h3><p>这个stino是可以代替arduino来进行交叉编译&amp;上传代码的,不过这个功能必须要求Arduino IDE在当前平台也支持编译和上传某种板子(比赛用的板子就不支持Linux下的Arduino…)</p>
-<p>stino安装完毕之后是需要选择Arduino IDE的安装位置,据说不要使用最新的Arduino,因为stino好像是不支持的.</p>
-<h3 id="小秘密"><a href="#小秘密" class="headerlink" title="小秘密"></a>小秘密</h3><p>我感觉stino除了加了自动补全,以及一些基本arduino的语法补全之外,并没有什么特点.假设工程中需要调用其他的文件,其他的库,还是用的不爽……</p>
-
+        
     </div>
 
     
@@ -207,7 +184,7 @@
     
         <div class="post-tags">
             <i class="fa fa-tags" aria-hidden="true"></i>
-            <a href="/tags/ide/">#IDE</a>
+            <a href="/tags/yearly/">#年记</a>
         </div>
     
 
